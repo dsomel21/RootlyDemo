@@ -10,7 +10,7 @@ class CreateSlackUsers < ActiveRecord::Migration[8.0]
 
       t.timestamps
     end
-    
-    add_index :slack_users, [:organization_id, :slack_user_id], unique: true
+
+    add_index :slack_users, [ :organization_id, :slack_user_id ], unique: true
   end
 end

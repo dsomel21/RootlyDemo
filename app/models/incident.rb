@@ -1,7 +1,7 @@
 class Incident < ApplicationRecord
   belongs_to :organization
-  belongs_to :slack_creator, class_name: 'SlackUser', optional: true
-  belongs_to :creator, class_name: 'User', optional: true
+  belongs_to :slack_creator, class_name: "SlackUser", optional: true
+  belongs_to :creator, class_name: "User", optional: true
   has_one :slack_channel, dependent: :destroy
 
   enum severity: { sev0: 0, sev1: 1, sev2: 2 }

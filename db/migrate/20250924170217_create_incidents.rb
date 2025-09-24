@@ -14,8 +14,8 @@ class CreateIncidents < ActiveRecord::Migration[8.0]
 
       t.timestamps
     end
-    
-    add_index :incidents, [:organization_id, :number], unique: true
+
+    add_index :incidents, [ :organization_id, :number ], unique: true
     add_check_constraint :incidents, "resolved_at IS NULL OR resolved_at >= declared_at", name: "resolved_at_after_declared_at"
   end
 end
