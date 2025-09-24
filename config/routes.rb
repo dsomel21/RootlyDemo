@@ -9,8 +9,20 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  # Webhook endpoint for debugging incoming requests
-  post "/" => "webhook#receive"
+  # Slack integration routes
+  namespace :slack do
+    # Installation page with "Add to Slack" button
+    get "install" => "install#show"
+
+    # OAuth callback for app installation
+    get "oauth/callback" => "oauth#callback"
+
+    # Webhook endpoint for debugging (unauthenticated)
+    post "webhook" => "webhook#receive"
+  end
+
+  # Webhook endpoint for debugging incoming requests (keeping for backward compatibility)
+  post "/" => "slack/webhook#receive"
 
   # Defines the root path route ("/")
   # root "posts#index"
