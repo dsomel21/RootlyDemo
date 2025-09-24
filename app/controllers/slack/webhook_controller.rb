@@ -1,6 +1,6 @@
-class Slack::WebhookController < ApplicationController
-  # Skip CSRF protection for webhook endpoints
-  skip_before_action :verify_authenticity_token, only: [ :receive ]
+class Slack::WebhookController < Slack::BaseController
+  # Skip authentication for webhook debugging endpoint
+  skip_before_action :authenticate_slack_request
 
   def receive
     Rails.logger.info "Webhook received from #{request.remote_ip}"

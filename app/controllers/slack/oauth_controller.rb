@@ -1,10 +1,10 @@
-class Slack::OauthController < ApplicationController
+class Slack::OauthController < Slack::BaseController
   require "net/http"
   require "uri"
   require "json"
 
-  # Skip CSRF protection for OAuth callback
-  skip_before_action :verify_authenticity_token, only: [ :callback ]
+  # Skip authentication for OAuth callback (handles its own auth)
+  skip_before_action :authenticate_slack_request
 
   def callback
     Rails.logger.info "Slack OAuth callback received"
