@@ -13,22 +13,16 @@ Rails.application.routes.draw do
   namespace :slack do
     # Installation page with "Add to Slack" button
     get "install" => "install#show"
-
+    
     # OAuth callback for app installation
     get "oauth/callback" => "oauth#callback"
-
+    
     # Slash commands endpoint
     post "commands" => "commands#receive"
-
+    
     # Interactive components (modals, buttons, etc.)
     post "interactions" => "interactions#receive"
-
-    # Webhook endpoint for debugging (unauthenticated)
-    post "webhook" => "webhook#receive"
   end
-
-  # Webhook endpoint for debugging incoming requests (keeping for backward compatibility)
-  post "/" => "slack/webhook#receive"
 
   # Defines the root path route ("/")
   # root "posts#index"
