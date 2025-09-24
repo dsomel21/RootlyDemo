@@ -35,5 +35,9 @@ module Rootly
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Allow localtunnel hosts for development/testing
+    # This enables URLs like "young-spies-taste.loca.lt" to connect to the Rails app
+    config.hosts << /.*\.loca\.lt\z/
   end
 end
