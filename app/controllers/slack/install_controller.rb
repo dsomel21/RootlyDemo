@@ -2,10 +2,23 @@ class Slack::InstallController < ApplicationController
   # Skip CSRF for install page (external users will hit this)
   skip_before_action :verify_authenticity_token, only: [ :show ]
 
+  # GET /slack/install
+  #
+  # Displays the "Add to Slack" installation page that initiates OAuth flow.
+  #
+  # OAuth Flow:
+  # 1. User clicks "Add to Slack" → redirected to Slack with our client_id
+  # 2. User grants permissions → Slack redirects to our oauth/callback with code
+  # 3. Our callback exchanges code for tokens → creates Organization record
+  #
+  # URL Parameters Passed to Slack:
+  # - client_id: Identifies our app
+  # - scope: Permissions we need (commands, chat:write, etc.)
+  # - redirect_uri: Where Slack sends user after authorization
+  # - state: CSRF protection token
+  #
+  # @return [void] Renders HTML page with OAuth button
   def show
-    Rails.logger.info "Slack install page accessed from #{request.remote_ip}"
-
-    # Build the Slack OAuth URL
     @slack_oauth_url = build_slack_oauth_url
     @callback_url = url_for(controller: "slack/oauth", action: "callback", only_path: false)
 
@@ -37,6 +50,7 @@ class Slack::InstallController < ApplicationController
     Base64.urlsafe_encode64(payload.to_json)
   end
 
+  # 📌 TODO: Let's redo this with Vue or something later
   def render_install_page
     html_content = <<~HTML
       <!DOCTYPE html>

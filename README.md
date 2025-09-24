@@ -1,24 +1,34 @@
-# README
+# Rootly
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A Rails application that integrates with Slack to manage incidents.
 
-Things you may want to cover:
+## Overview
 
-* Ruby version
+Rootly provides incident management through Slack slash commands and interactive
+modals. Users can declare and resolve incidents directly from their Slack
+workspace.
 
-* System dependencies
+## Key Features
 
-* Configuration
+- **Slack Integration**: OAuth app installation and slash commands
+- **Incident Management**: Declare incidents with `/rootly declare <title>`
+- **Organization Support**: Multi-tenant with workspace isolation
 
-* Database creation
+## Documentation
 
-* Database initialization
+- **Controllers**: [app/controllers/README.md](app/controllers/README.md)
+- **Slack Integration**:
+  [app/controllers/slack/README.md](app/controllers/slack/README.md)
 
-* How to run the test suite
+## Setup
 
-* Services (job queues, cache servers, search engines, etc.)
+1. Install dependencies: `bundle install`
+2. Setup database: `rails db:setup`
+3. Configure Slack credentials: `rails credentials:edit`
+4. Start server: `rails server`
 
-* Deployment instructions
+## Development
 
-* ...
+- **Ruby version**: Check `.ruby-version`
+- **Database**: PostgreSQL
+- **External tunneling**: Use localtunnel for Slack webhooks
