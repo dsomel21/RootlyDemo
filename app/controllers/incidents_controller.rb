@@ -84,7 +84,12 @@ class IncidentsController < ApplicationController
     case @sort_column
     when :title
       # String sorting - case insensitive
-      query = query.order(Arel.sql("LOWER(title) #{@sort_direction}"))
+      # Use Arel.sql with safe interpolation to avoid SQL injection
+      if @sort_direction == :asc
+        query = query.order(Arel.sql("LOWER(title) ASC"))
+      else
+        query = query.order(Arel.sql("LOWER(title) DESC"))
+      end
     when :severity
       # Enum sorting - convert to integer for proper ordering
       # sev0 = 0 (highest), sev1 = 1, sev2 = 2 (lowest)
