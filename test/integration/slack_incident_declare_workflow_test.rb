@@ -43,7 +43,25 @@ class SlackIncidentDeclareHttpWorkflowTest < ActionDispatch::IntegrationTest
     # Mock the current_organization for test environment
     Slack::CommandsController.any_instance.stubs(:current_organization).returns(@organization)
 
-    # Simulate Slack sending the command request
+    # This similar to how what the actual params look like:
+    #
+    # {"token" => "CGpMVftw6jg5WBCoJogdxN97",
+    # "team_id" => "T09GY1KKMFC",
+    # "team_domain" => "octobers-very-own-hq",
+    # "channel_id" => "C09GY1L4QHG",
+    # "channel_name" => "all-octobers-very-own",
+    # "user_id" => "U09GY1KKMK4",
+    # "user_name" => "dsomel21",
+    # "command" => "/rootly",
+    # "text" => "declare \"Dilraj is too hot!\"",
+    # "api_app_id" => "A09GYBJ4GK0",
+    # "is_enterprise_install" => "false",
+    # "response_url" => "https://hooks.slack.com/commands/T09GY1KKMFC/9579185965778/s3XxsTtBXAZ9iOy4aueFUGjM",
+    # "trigger_id" => "9579185965858.9576053667522.0ed5bc81d152012a3fbaa61026675f10",
+    # "controller" => "slack/commands",
+    # "action" => "receive"
+    # }
+
     slack_params = build_slack_command_params(
       command: "/rootly",
       text: "declare Dilraj is on fire",
