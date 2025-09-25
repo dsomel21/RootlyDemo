@@ -10,23 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_24_204419) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_25_051110) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
 
   create_table "incident_counters", primary_key: "organization_id", id: :uuid, default: nil, force: :cascade do |t|
-    t.integer "last_number", default: 0
+    t.integer "last_number", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["organization_id"], name: "index_incident_counters_on_organization_id"
   end
 
   create_table "incidents", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "organization_id", null: false
     t.string "title", null: false
     t.text "description"
-    t.integer "number", null: false
     t.integer "severity"
     t.integer "status", default: 0, null: false
     t.uuid "slack_creator_id"
@@ -35,6 +33,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_24_204419) do
     t.datetime "resolved_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "number", null: false
     t.index ["creator_id"], name: "index_incidents_on_creator_id"
     t.index ["organization_id", "number"], name: "index_incidents_on_organization_id_and_number", unique: true
     t.index ["organization_id"], name: "index_incidents_on_organization_id"
@@ -82,6 +81,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_24_204419) do
     t.uuid "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "email"
+    t.string "title"
     t.index ["organization_id", "slack_user_id"], name: "index_slack_users_on_organization_id_and_slack_user_id", unique: true
     t.index ["organization_id"], name: "index_slack_users_on_organization_id"
     t.index ["user_id"], name: "index_slack_users_on_user_id"

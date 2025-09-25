@@ -61,7 +61,6 @@ class SlackIncidentDeclareHttpWorkflowTest < ActionDispatch::IntegrationTest
     # "controller" => "slack/commands",
     # "action" => "receive"
     # }
-
     slack_params = build_slack_command_params(
       command: "/rootly",
       text: "declare Dilraj is on fire",
