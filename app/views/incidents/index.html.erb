@@ -1,0 +1,253 @@
+<%# 
+  INCIDENTS INDEX PAGE WITH TURBO SORTING
+  
+  This page demonstrates several key Turbo concepts:
+  
+  1. TURBO FRAMES: 
+     - The incidents list is wrapped in a turbo_frame_tag
+     - When sort links are clicked, only this frame gets updated
+     - The rest of the page (header, navigation, etc.) stays unchanged
+  
+  2. TURBO NAVIGATION:
+     - Sort links use standard Rails link_to helpers
+     - Turbo automatically intercepts these clicks
+     - No JavaScript required - it's all handled by Turbo
+  
+  3. PROGRESSIVE ENHANCEMENT:
+     - If JavaScript is disabled, links still work (full page reload)
+     - The same controller action handles both cases
+     - Graceful degradation built-in
+-%>
+
+<div class="min-h-screen bg-gray-50">
+  <!-- Page Header -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-6">
+        <div class="md:flex md:items-center md:justify-between">
+          <div class="flex-1 min-w-0">
+            <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+              🚨 Incidents Dashboard
+            </h1>
+            <p class="mt-1 text-sm text-gray-500">
+              Manage and track all incidents across your organization
+            </p>
+          </div>
+          <div class="mt-4 flex md:mt-0 md:ml-4">
+            <span class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white">
+              Total: <%= @incidents.count %> incidents
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%# 
+      TURBO FRAME EXPLANATION:
+      
+      This turbo_frame_tag creates a "frame" with the ID "incidents_list".
+      
+      HOW IT WORKS:
+      1. When a link inside this frame is clicked, Turbo makes an AJAX request
+      2. The server responds with HTML containing a matching turbo_frame_tag
+      3. Turbo extracts the content from the matching frame in the response
+      4. It replaces THIS frame's content with the new content
+      5. The URL in the browser updates to reflect the new state
+      
+      BENEFITS:
+      - Only the incidents list updates, not the entire page
+      - Much faster than full page reloads
+      - Smooth user experience with no page flashing
+      - Browser back/forward buttons still work correctly
+      - URLs are shareable and bookmarkable
+    %>
+    <%= turbo_frame_tag "incidents_list" do %>
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <!-- Sort Controls -->
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 sm:px-6">
+          <div class="flex flex-wrap items-center justify-between">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              Incidents List
+            </h3>
+            
+            <%# 
+              TURBO SORTING LINKS:
+              
+              These are regular Rails link_to helpers, but Turbo makes them magical!
+              
+              WHAT HAPPENS WHEN CLICKED:
+              1. User clicks "Sort by Title ↑"
+              2. Turbo intercepts the click (no page reload)
+              3. Turbo makes GET request to /incidents?sort=title&direction=asc
+              4. Server processes request, renders HTML with turbo_frame_tag "incidents_list"
+              5. Turbo finds the matching frame in response
+              6. Turbo replaces current frame content with new sorted content
+              7. URL updates to /incidents?sort=title&direction=asc
+              8. User sees smooth transition with updated sort indicators
+              
+              The links target the same frame they're in, so Turbo knows to update this frame.
+            %>
+            <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
+              <span class="text-sm text-gray-500">Sort by:</span>
+              
+              <%= link_to sort_url(:title), 
+                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:title) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+                Title 
+                <% if sorted_by?(:title) %>
+                  <%= sort_direction_for(:title) == :asc ? "↑" : "↓" %>
+                <% end %>
+              <% end %>
+              
+              <%= link_to sort_url(:severity), 
+                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:severity) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+                Severity 
+                <% if sorted_by?(:severity) %>
+                  <%= sort_direction_for(:severity) == :asc ? "↑" : "↓" %>
+                <% end %>
+              <% end %>
+              
+              <%= link_to sort_url(:status), 
+                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:status) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+                Status 
+                <% if sorted_by?(:status) %>
+                  <%= sort_direction_for(:status) == :asc ? "↑" : "↓" %>
+                <% end %>
+              <% end %>
+              
+              <%= link_to sort_url(:created_at), 
+                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:created_at) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+                Created 
+                <% if sorted_by?(:created_at) %>
+                  <%= sort_direction_for(:created_at) == :asc ? "↑" : "↓" %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Incidents List -->
+        <% if @incidents.any? %>
+          <ul class="divide-y divide-gray-200">
+            <% @incidents.each do |incident| %>
+              <%# 
+                INCIDENT ROW COMPONENT:
+                Each incident is rendered as a list item with rich information.
+                We could extract this to a partial or ViewComponent for reusability.
+              %>
+              <li class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors duration-150">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <!-- Incident Header -->
+                    <div class="flex items-center space-x-3">
+                      <div class="flex-shrink-0">
+                        <%# Severity Badge %>
+                        <% severity_class = case incident.severity
+                             when 'sev0' then 'bg-red-100 text-red-800'
+                             when 'sev1' then 'bg-orange-100 text-orange-800' 
+                             else 'bg-yellow-100 text-yellow-800'
+                             end %>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= severity_class %>">
+                          <%= incident.severity&.upcase || 'SEV2' %>
+                        </span>
+                      </div>
+                      
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center space-x-2">
+                          <h3 class="text-sm font-medium text-gray-900 truncate">
+                            #<%= incident.number %> - <%= incident.title %>
+                          </h3>
+                          
+                          <%# Status Badge %>
+                          <% status_class = case incident.status
+                               when 'resolved' then 'bg-green-100 text-green-800'
+                               when 'monitoring' then 'bg-blue-100 text-blue-800'
+                               when 'identified' then 'bg-purple-100 text-purple-800'
+                               else 'bg-gray-100 text-gray-800'
+                               end %>
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= status_class %>">
+                            <%= incident.status&.capitalize || 'Unknown' %>
+                          </span>
+                        </div>
+                        
+                        <!-- Description -->
+                        <% if incident.description.present? %>
+                          <p class="mt-1 text-sm text-gray-500 line-clamp-2">
+                            <%= truncate(incident.description, length: 120) %>
+                          </p>
+                        <% end %>
+                        
+                        <!-- Metadata -->
+                        <div class="mt-2 flex items-center text-xs text-gray-500 space-x-4">
+                          <span class="flex items-center">
+                            <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <%= time_ago_in_words(incident.created_at) %> ago
+                          </span>
+                          
+                          <% if incident.slack_creator %>
+                            <span class="flex items-center">
+                              <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                              </svg>
+                              <%= incident.slack_creator.display_name.presence || 
+                                  incident.slack_creator.real_name.presence || 
+                                  "Unknown User" %>
+                            </span>
+                          <% end %>
+                          
+                          <% if incident.organization %>
+                            <span class="flex items-center">
+                              <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h2M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                              </svg>
+                              <%= incident.organization.name %>
+                            </span>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Actions -->
+                  <div class="flex-shrink-0 flex items-center space-x-2">
+                    <% if incident.slack_channel %>
+                      <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                        <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                        </svg>
+                        #<%= incident.slack_channel.name %>
+                      </span>
+                    <% end %>
+                    
+                    <%= link_to incident_path(incident), 
+                          class: "inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" do %>
+                      View Details
+                      <svg class="ml-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    <% end %>
+                  </div>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <!-- Empty State -->
+          <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M34 40h10v-4a6 6 0 00-10.712-3.714M34 40H14m20 0v-4a9.971 9.971 0 00-.712-3.714M14 40H4v-4a6 6 0 0110.712-3.714M14 40v-4a9.971 9.971 0 01.712-3.714M28 16a4 4 0 11-8 0 4 4 0 018 0zm-4 8a5 5 0 00-5 5v4h10v-4a5 5 0 00-5-5z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No incidents found</h3>
+            <p class="mt-1 text-sm text-gray-500">
+              Get started by creating your first incident through Slack with <code>/rootly declare</code>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

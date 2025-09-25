@@ -1,0 +1,153 @@
+<%# 
+  INCIDENT DETAIL PAGE
+  
+  This is a simple detail view for individual incidents.
+  We could enhance this with more Turbo features like:
+  - Turbo Streams for real-time updates
+  - Inline editing with Turbo Frames
+  - Status change forms with Turbo
+-%>
+
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <%= link_to incidents_path, 
+                  class: "inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700" do %>
+              <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              Back to Incidents
+            <% end %>
+            
+            <h1 class="text-2xl font-bold text-gray-900">
+              Incident #<%= @incident.number %>
+            </h1>
+          </div>
+          
+          <div class="flex items-center space-x-3">
+            <!-- Status Badge -->
+            <% status_class = case @incident.status
+                 when 'resolved' then 'bg-green-100 text-green-800'
+                 when 'monitoring' then 'bg-blue-100 text-blue-800'
+                 when 'identified' then 'bg-purple-100 text-purple-800'
+                 else 'bg-gray-100 text-gray-800'
+                 end %>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= status_class %>">
+              <%= @incident.status&.capitalize || 'Unknown' %>
+            </span>
+            
+            <!-- Severity Badge -->
+            <% severity_class = case @incident.severity
+                 when 'sev0' then 'bg-red-100 text-red-800'
+                 when 'sev1' then 'bg-orange-100 text-orange-800' 
+                 else 'bg-yellow-100 text-yellow-800'
+                 end %>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= severity_class %>">
+              <%= @incident.severity&.upcase || 'SEV2' %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          <%= @incident.title %>
+        </h3>
+        <% if @incident.description.present? %>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">
+            <%= simple_format(@incident.description) %>
+          </p>
+        <% end %>
+      </div>
+      
+      <div class="border-t border-gray-200">
+        <dl>
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Incident Number</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">#<%= @incident.number %></dd>
+          </div>
+          
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Organization</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <%= @incident.organization&.name || 'Unknown' %>
+            </dd>
+          </div>
+          
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Declared by</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <% if @incident.slack_creator %>
+                <div class="flex items-center">
+                  <% if @incident.slack_creator.avatar_url.present? %>
+                    <img class="h-6 w-6 rounded-full mr-2" src="<%= @incident.slack_creator.avatar_url %>" alt="">
+                  <% end %>
+                  <%= @incident.slack_creator.display_name.presence || 
+                      @incident.slack_creator.real_name.presence || 
+                      "Unknown User" %>
+                </div>
+              <% else %>
+                Unknown
+              <% end %>
+            </dd>
+          </div>
+          
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Declared at</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <%= @incident.declared_at&.strftime("%B %d, %Y at %I:%M %p") || 'Unknown' %>
+              <span class="text-gray-500">(<%= time_ago_in_words(@incident.declared_at) %> ago)</span>
+            </dd>
+          </div>
+          
+          <% if @incident.resolved_at %>
+            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt class="text-sm font-medium text-gray-500">Resolved at</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <%= @incident.resolved_at.strftime("%B %d, %Y at %I:%M %p") %>
+                <span class="text-gray-500">(<%= time_ago_in_words(@incident.resolved_at) %> ago)</span>
+              </dd>
+            </div>
+            
+            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt class="text-sm font-medium text-gray-500">Resolution time</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <% if @incident.declared_at && @incident.resolved_at %>
+                  <% duration = @incident.resolved_at - @incident.declared_at %>
+                  <% hours = (duration / 1.hour).to_i %>
+                  <% minutes = ((duration % 1.hour) / 1.minute).to_i %>
+                  <%= "#{hours}h #{minutes}m" %>
+                <% else %>
+                  Unknown
+                <% end %>
+              </dd>
+            </div>
+          <% end %>
+          
+          <% if @incident.slack_channel %>
+            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt class="text-sm font-medium text-gray-500">Slack Channel</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <div class="flex items-center">
+                  <svg class="mr-2 h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                  </svg>
+                  #<%= @incident.slack_channel.name %>
+                </div>
+              </dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>

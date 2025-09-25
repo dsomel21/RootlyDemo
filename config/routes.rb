@@ -24,6 +24,9 @@ Rails.application.routes.draw do
     post "interactions" => "interactions#receive"
   end
 
+  # Incidents management
+  resources :incidents, only: [ :index, :show ]
+
   # Defines the root path route ("/")
-  # root "posts#index"
+  root "incidents#index"
 end
