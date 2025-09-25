@@ -1,38 +1,38 @@
 class Slack::CommandsController < Slack::BaseController
   # POST /slack/commands
   #
-  # WHAT TRIGGERS THIS:
-  # - User types a slash command in Slack: /rootly declare "Something"
-  # - User types: /rootly resolve
-  # - User types: /rootly (with no arguments)
+  # Handles the `/rootly` slash command from Slack.
   #
-  # RESPONSIBILITY:
-  # - Parse the command text
-  # - Figure out what the user wants to do
-  # - Open modals for complex actions
-  # - Show help text for invalid commands
+  # NOTE:
+  # Slack only lets us define one slash command here: `/rootly`.
+  # Therefore, `params[:command]` will always be "/rootly".
+  # We parse subcommands (e.g. "declare <title>", "resolve") from `params[:text]`.
   #
-  # WHEN IT RUNS:
-  # Immediately when user presses Enter after typing /rootly command
-  #
-  # EXAMPLE FLOW:
-  # 1. User types: /rootly declare "Database is down"
-  # 2. THIS controller receives the command
-  # 3. We parse "declare" and extract "Database is down"
-  # 4. We open a modal with the title pre-filled
-  # 5. InteractionsController handles what happens next
+  # FLOW:
+  # Slack user types `/rootly declare "Something"` → we parse `declare "Something"` from params[:text]
 
   def receive
     puts "🚀 SLACK COMMAND RECEIVED: #{params[:command]}"
 
-    case params[:command]
-    when "/rootly"
-      puts "🚀 HANDLING ROOTLY COMMAND"
-    else
-      render json: {
+    command_router = Slack::CommandRouter.route(params[:text])
+
+    response = case command_router[:action]
+    when :declare
+      puts "🚀 HANDLING DECLARE COMMAND"
+      Slack::Workflows::DeclareCommand.new.call(organization: current_organization, params: params)
+    when :resolve
+      puts "🚀 HANDLING RESOLVE COMMAND"
+      Slack::Response.err("Resolve command not implemented yet")
+    when :help
+      puts "🚀 HANDLING HELP COMMAND"
+      Slack::Response.ok({
         response_type: "ephemeral",
-        text: "❓ Unknown command: #{params[:command]}"
-      }
+        text: "🚨 *Rootly Commands:*\n• `/rootly declare <title>` - Create a new incident\n• `/rootly resolve` - Resolve current incident"
+      })
+    else
+      Slack::Response.err("❓ Unknown command: #{params[:text]}")
     end
+
+    render json: response.json, status: response.status
   end
 end
