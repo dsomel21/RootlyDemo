@@ -1,0 +1,15 @@
+one:
+  id: "550e8400-e29b-41d4-a716-446655440010"
+  organization_id: "550e8400-e29b-41d4-a716-446655440000"
+  team_id: "T123456789"
+  bot_user_id: "B123456789"
+  bot_access_token_ciphertext: "xoxb-test-token-encrypted"
+  signing_secret_ciphertext: "test-signing-secret-encrypted"
+
+two:
+  id: "550e8400-e29b-41d4-a716-446655440011"
+  organization_id: "550e8400-e29b-41d4-a716-446655440001"
+  team_id: "T987654321"
+  bot_user_id: "B987654321"
+  bot_access_token_ciphertext: "xoxb-test-token-2-encrypted"
+  signing_secret_ciphertext: "test-signing-secret-2-encrypted"

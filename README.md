@@ -32,3 +32,23 @@ workspace.
 - **Ruby version**: Check `.ruby-version`
 - **Database**: PostgreSQL
 - **External tunneling**: Use localtunnel for Slack webhooks
+
+### Code Quality
+
+Run the linter to check code style:
+
+```bash
+bundle exec rubocop
+```
+
+Auto-fix most issues:
+
+```bash
+bundle exec rubocop --autocorrect
+```
+
+Run tests:
+
+```bash
+rails test
+```

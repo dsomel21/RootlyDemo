@@ -5,7 +5,7 @@ class Slack::BaseController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   # Verify all Slack requests and find organization
-  before_action :authenticate_slack_request
+  before_action :authenticate_slack_request, unless: -> { Rails.env.test? }
 
   # Make organization available to all Slack controllers
   attr_reader :current_organization

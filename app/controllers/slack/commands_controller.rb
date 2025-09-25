@@ -12,26 +12,21 @@ class Slack::CommandsController < Slack::BaseController
   # Slack user types `/rootly declare "Something"` → we parse `declare "Something"` from params[:text]
 
   def receive
-    puts "🚀 SLACK COMMAND RECEIVED: #{params[:command]}"
+        command_router = Slack::CommandRouter.route(params[:text])
 
-    command_router = Slack::CommandRouter.route(params[:text])
-
-    response = case command_router[:action]
-    when :declare
-      puts "🚀 HANDLING DECLARE COMMAND"
-      Slack::Workflows::DeclareCommand.new.call(organization: current_organization, params: params)
-    when :resolve
-      puts "🚀 HANDLING RESOLVE COMMAND"
-      Slack::Response.err("Resolve command not implemented yet")
-    when :help
-      puts "🚀 HANDLING HELP COMMAND"
+        response = case command_router[:action]
+        when :declare
+          Slack::Workflows::DeclareCommand.new.call(organization: current_organization, params: params)
+        when :resolve
+          Slack::Response.err("Resolve command not implemented yet")
+        when :help
       Slack::Response.ok({
         response_type: "ephemeral",
         text: "🚨 *Rootly Commands:*\n• `/rootly declare <title>` - Create a new incident\n• `/rootly resolve` - Resolve current incident"
       })
-    else
+        else
       Slack::Response.err("❓ Unknown command: #{params[:text]}")
-    end
+        end
 
     render json: response.json, status: response.status
   end

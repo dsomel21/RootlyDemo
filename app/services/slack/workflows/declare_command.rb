@@ -5,8 +5,8 @@ module Slack
         ctx = { org: organization, params: params }
 
         return Slack::Response.err("Usage: `/rootly declare <title>`") unless get_args(ctx)
-        return Slack::Response.err("Could not build modal.")           unless create_modal(ctx)
-        return Slack::Response.err("Slack error opening modal.")        unless open_modal(ctx)
+        return Slack::Response.err("Could not build modal.")           unless build_modal(ctx)
+        return Slack::Response.err("Slack error opening modal.")        unless tell_slack_to_open_modal(ctx)
 
         Slack::Response.ok({})
       end
@@ -14,8 +14,8 @@ module Slack
       # Originally, I was thinking this could be used like:
       # @declare_command = Slack::Workflows::DeclareCommand.new(org, params)
       # @declare_command.get_args
-      # @declare_command.create_modal
-      # @declare_command.open_modal
+      # @declare_command.build_modal
+      # @declare_command.tell_slack_to_open_modal
       # This way, in the controller action, we can see what's happening, but I decided to just leave it all in this Worfkflow
 
       private
@@ -23,7 +23,6 @@ module Slack
       # 1) Parse inputs from Slack payload
       def get_args(ctx)
         text = ctx[:params][:text].to_s.strip
-        debugger
         return false unless text =~ /^declare\s+(.+)/i
         ctx[:title]      = Regexp.last_match(1).strip
         ctx[:trigger_id] = ctx[:params][:trigger_id]
@@ -32,7 +31,7 @@ module Slack
       end
 
       # 2) Build the modal JSON
-      def create_modal(ctx)
+      def build_modal(ctx)
         ctx[:modal] = BlockKits::DeclareModal.build(
           title: ctx[:title],
           trigger_id: ctx[:trigger_id]
@@ -40,7 +39,7 @@ module Slack
       end
 
       # 3) Tell Slack to open the modal
-      def open_modal(ctx)
+      def tell_slack_to_open_modal(ctx)
         Slack::Client.new(ctx[:org]).views_open(ctx[:modal])
         true
       rescue => e
