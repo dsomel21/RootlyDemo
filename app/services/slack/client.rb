@@ -15,6 +15,9 @@ module Slack
     # Create a new Slack channel
     def conversations_create(payload) = post("conversations.create", payload)
 
+    # Invite users to a channel
+    def conversations_invite(payload) = post("conversations.invite", payload)
+
     # Post a message to a channel
     def chat_post_message(payload) = post("chat.postMessage", payload)
 

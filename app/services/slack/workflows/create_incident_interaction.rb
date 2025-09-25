@@ -16,6 +16,7 @@ module Slack
           create_incident_record
           create_dedicated_slack_channel
           link_incident_to_slack_channel
+          invite_creator_to_channel
           post_welcome_message_to_channel
         end
         build_success_response
@@ -118,6 +119,20 @@ module Slack
           name: @slack_channel_response.dig("channel", "name")
         )
         Rails.logger.info "Linked incident to Slack channel"
+      end
+
+      def invite_creator_to_channel
+        channel_id = @slack_channel_response.dig("channel", "id")
+
+        client.conversations_invite({
+          channel: channel_id,
+          users: slack_user_id
+        })
+
+        Rails.logger.info "Invited creator #{slack_user_id} to incident channel"
+      rescue => e
+        # Don't fail the entire incident creation if invite fails
+        Rails.logger.warn "Failed to invite creator to channel: #{e.message}"
       end
 
       def post_welcome_message_to_channel
