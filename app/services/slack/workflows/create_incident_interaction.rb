@@ -138,6 +138,7 @@ module Slack
         }
       end
 
+      # 📌 TODO: Move these things into the app/presenters
       def build_header_block
         {
           type: "header",
@@ -148,6 +149,7 @@ module Slack
         }
       end
 
+      # 📌 TODO: Move these things into the app/presenters
       def build_details_block
         {
           type: "section",

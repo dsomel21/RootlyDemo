@@ -13,6 +13,7 @@ module Slack
 
     private
 
+    # 📌 TODO: Add docs here about how Slack has these 2 action buttons
     def self.route_view_submission(payload)
       callback_id = payload.dig("view", "callback_id")
 
