@@ -68,6 +68,22 @@ class FetchSlackUserProfileJob < ApplicationJob
       Rails.logger.info "✅ Updated Slack profile for #{slack_user.display_name || slack_user.real_name || slack_user_id}"
       Rails.logger.info "   Avatar: #{slack_user.avatar_url ? 'Updated' : 'Not available'}"
 
+      # Chain another job to post the user's profile to the incident channel
+      # Find any recent incident created by this user to post the profile message
+      recent_incident = organization.incidents
+                                   .joins(:slack_creator)
+                                   .where(slack_users: { slack_user_id: slack_user_id })
+                                   .where('incidents.declared_at > ?', 10.minutes.ago)
+                                   .order(declared_at: :desc)
+                                   .first
+
+      if recent_incident&.slack_channel
+        Rails.logger.info "🔗 Chaining profile message job for incident ##{recent_incident.number}"
+        PostUserProfileMessageJob.perform_later(recent_incident.id, slack_user_id)
+      else
+        Rails.logger.info "ℹ️ No recent incident found to post profile message"
+      end
+
     rescue => e
       Rails.logger.error "❌ Failed to fetch Slack profile for #{slack_user_id}: #{e.message}"
       Rails.logger.error "   Organization: #{organization.name} (#{organization_id})"
