@@ -18,11 +18,14 @@ class Slack::CommandsController < Slack::BaseController
         when :declare
           Slack::Workflows::DeclareCommand.new.call(organization: current_organization, params: params)
         when :resolve
-          Slack::Response.err("Resolve command not implemented yet")
+          Slack::Workflows::ResolveIncidentCommand.new(
+            organization: current_organization,
+            params: params
+          ).call
         when :help
       Slack::Response.ok({
         response_type: "ephemeral",
-        text: "🚨 *Rootly Commands:*\n• `/rootly declare <title>` - Create a new incident\n• `/rootly resolve` - Resolve current incident"
+        text: "🚨 *Rootly Commands:*\n• `/rootly declare <title>` - Create a new incident\n• `/rootly resolve` - Resolve current incident (only works in incident channels)"
       })
         else
       Slack::Response.err("❓ Unknown command: #{params[:text]}")
