@@ -1,23 +1,6 @@
-# Sidekiq Job: Fetch Slack User Profile
-#
-# This background job fetches a user's Slack profile information (including avatar)
-# and updates our local SlackUser record. This runs asynchronously to avoid
-# slowing down the incident declaration process.
-#
-# WHEN IT RUNS:
-# - After incident declaration when we create a SlackUser record
-# - When we detect a user's profile info is missing or outdated
-#
-# WHAT IT DOES:
-# 1. Calls Slack's users.info API to get user profile
-# 2. Extracts avatar URL, display name, real name, email, title
-# 3. Updates our local SlackUser record with fresh data
-# 4. Handles API errors gracefully (user might have left workspace, etc.)
-#
-# RETRY LOGIC:
-# - Retries up to 3 times on failure (configured in sidekiq.rb)
-# - Uses exponential backoff for retries
-# - Logs failures for monitoring
+# Sidekiq Job: Fetches and updates a Slack user's profile (avatar, name, email, etc.)
+# Runs asynchronously after incident declaration or when profile info is missing/outdated.
+# Retries up to 3 times on failure.
 
 class FetchSlackUserProfileJob < ApplicationJob
   queue_as :default
@@ -67,22 +50,6 @@ class FetchSlackUserProfileJob < ApplicationJob
 
       Rails.logger.info "✅ Updated Slack profile for #{slack_user.display_name || slack_user.real_name || slack_user_id}"
       Rails.logger.info "   Avatar: #{slack_user.avatar_url ? 'Updated' : 'Not available'}"
-
-      # Chain another job to post the user's profile to the incident channel
-      # Find any recent incident created by this user to post the profile message
-      recent_incident = organization.incidents
-                                   .joins(:slack_creator)
-                                   .where(slack_users: { slack_user_id: slack_user_id })
-                                   .where('incidents.declared_at > ?', 10.minutes.ago)
-                                   .order(declared_at: :desc)
-                                   .first
-
-      if recent_incident&.slack_channel
-        Rails.logger.info "🔗 Chaining profile message job for incident ##{recent_incident.number}"
-        PostUserProfileMessageJob.perform_later(recent_incident.id, slack_user_id)
-      else
-        Rails.logger.info "ℹ️ No recent incident found to post profile message"
-      end
 
     rescue => e
       Rails.logger.error "❌ Failed to fetch Slack profile for #{slack_user_id}: #{e.message}"

@@ -16,10 +16,11 @@ module Slack
           create_incident_record
           create_dedicated_slack_channel
           link_incident_to_slack_channel
-          invite_creator_to_channel
-          post_welcome_message_to_channel
-        end
-        build_success_response
+                 invite_creator_to_channel
+                 post_welcome_message_to_channel
+                 enqueue_profile_message_job
+               end
+               build_success_response
       rescue => e
         Rails.logger.error "Failed to create incident: #{e.message}"
         build_error_response(e.message)
@@ -139,6 +140,13 @@ module Slack
         message = build_welcome_message
         client.chat_post_message(message)
         Rails.logger.info "Posted welcome message to incident channel"
+      end
+
+      def enqueue_profile_message_job
+        # Enqueue job to post user profile message after profile data is fetched
+        # This provides a clear separation of concerns and makes the workflow explicit
+        Rails.logger.info "📸 Enqueuing profile message job for incident ##{incident.number}"
+        PostUserProfileMessageJob.perform_later(incident.id, slack_user_id)
       end
 
       def build_welcome_message
