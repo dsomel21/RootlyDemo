@@ -24,6 +24,9 @@ module Slack
     # Get user information (profile, name, etc.)
     def users_info(user_id) = post("users.info", { user: user_id })
 
+    # List all users in the workspace
+    def users_list(limit: 100) = post("users.list", { limit: limit })
+
     private
 
     def post(path, payload)

@@ -27,6 +27,10 @@ Rails.application.routes.draw do
   # Incidents management
   resources :incidents, only: [ :index, :show ]
 
+  # Sidekiq Web UI for monitoring background jobs
+  require "sidekiq/web"
+  mount Sidekiq::Web => "/sidekiq"
+
   # Defines the root path route ("/")
   root "incidents#index"
 end

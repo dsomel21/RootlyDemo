@@ -56,29 +56,29 @@ module Slack
       def find_or_create_slack_user
         @slack_user = organization.slack_users.find_or_initialize_by(slack_user_id: slack_user_id)
 
-        if @slack_user.new_record? || @slack_user.display_name.blank?
-          fetch_and_update_user_profile
+        # Always save the user record first (needed for the background job)
+        if @slack_user.new_record?
+          @slack_user.save!
+          Rails.logger.info "Created new SlackUser record for #{slack_user_id}"
         end
 
-        @slack_user.save! if @slack_user.changed?
+        # Enqueue background job to fetch/update profile if needed
+        if should_update_profile?
+          Rails.logger.info "🔄 Enqueuing profile fetch job for #{slack_user_id}"
+          FetchSlackUserProfileJob.perform_later(organization.id, slack_user_id)
+        end
+
         Rails.logger.info "Found/created Slack user: #{@slack_user.display_name || @slack_user.real_name || slack_user_id}"
       end
 
-      def fetch_and_update_user_profile
-        user_info = client.users_info(slack_user_id)
-        profile = user_info.dig("user", "profile") || {}
-        user_data = user_info["user"] || {}
-
-        @slack_user.assign_attributes(
-          display_name: profile["display_name"],
-          real_name: user_data["real_name"],
-          avatar_url: profile["image_192"] || profile["image_72"],
-          email: profile["email"],
-          title: profile["title"]
-        )
-      rescue => e
-        Rails.logger.warn "Failed to fetch user profile for #{slack_user_id}: #{e.message}"
-        # Continue without profile data
+      # Determine if we should update the user's profile
+      # We update if:
+      # - Profile data is missing (new user or incomplete data)
+      # - Profile hasn't been updated recently (could add timestamp check later)
+      def should_update_profile?
+        @slack_user.display_name.blank? ||
+        @slack_user.real_name.blank? ||
+        @slack_user.avatar_url.blank?
       end
 
       def generate_incident_number

@@ -33,7 +33,7 @@ class Slack::InstallController < ApplicationController
 
     params = {
       client_id: Rails.application.credentials.slack[:client_id],
-      scope: "channels:manage,chat:write,commands,groups:write,users:read",
+      scope: "commands,chat:write,chat:write.public,channels:read,channels:manage,channels:join,groups:read,groups:write,users:read,users:read.email,channels:history,groups:history,im:history,mpim:history,pins:read,pins:write,files:read,links:read",
       redirect_uri: callback_url,
       state: generate_state_token
     }
