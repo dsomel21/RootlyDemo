@@ -51,6 +51,12 @@ module Slack
           raise ValidationError, "Title must be less than 100 characters"
         end
 
+        # Validate channel name won't exceed Slack's 80-char limit
+        channel_name = generate_channel_name(title)
+        if channel_name.length > 80
+          raise ValidationError, "Title too long for Slack channel (max ~65 chars)"
+        end
+
         Rails.logger.info "Incident data validation passed"
       end
 
@@ -110,8 +116,11 @@ module Slack
         Rails.logger.info "E: #{@slack_channel_response.dig('channel', 'name')}"
       end
 
-      def generate_channel_name
-        "inc-#{@incident_number.to_s.rjust(4, '0')}-#{title.parameterize}"
+      def generate_channel_name(incident_title = title)
+        base = "inc-#{@incident_number.to_s.rjust(4, '0')}-"
+        remaining = 80 - base.length
+        truncated_title = incident_title.parameterize.truncate(remaining, omission: "")
+        "#{base}#{truncated_title}"
       end
 
       def link_incident_to_slack_channel
