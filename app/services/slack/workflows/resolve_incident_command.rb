@@ -14,7 +14,7 @@ module Slack
         validate_can_resolve
         resolve_incident
         post_resolution_message
-        enqueue_analytics_job
+        enqueue_epic_analytics_job
         build_success_response
       rescue => e
         Rails.logger.error "Failed to resolve incident: #{e.message}"
@@ -190,9 +190,9 @@ module Slack
         }
       end
 
-      def enqueue_analytics_job
-        Rails.logger.info "📊 Enqueuing incident analytics job for ##{incident.number}"
-        GatherIncidentAnalyticsJob.perform_later(incident.id)
+      def enqueue_epic_analytics_job
+        Rails.logger.info "📸 Enqueuing EPIC analytics visualization for ##{incident.number}"
+        EpicAnalyticsImageJob.perform_later(incident.id)
       end
 
       def build_success_response
