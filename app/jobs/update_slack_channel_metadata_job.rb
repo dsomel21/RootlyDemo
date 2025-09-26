@@ -51,7 +51,7 @@ class UpdateSlackChannelMetadataJob < ApplicationJob
   def update_channel_topic(client, channel_id, incident)
     topic = build_channel_topic(incident)
 
-    client.conversations_setTopic({
+    client.conversations_set_topic({
       channel: channel_id,
       topic: topic
     })
@@ -114,7 +114,7 @@ class UpdateSlackChannelMetadataJob < ApplicationJob
       description += "\n\n#{incident.description}"
     end
 
-    client.conversations_setPurpose({
+    client.conversations_set_purpose({
       channel: channel_id,
       purpose: description
     })
