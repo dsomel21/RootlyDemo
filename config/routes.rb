@@ -22,6 +22,14 @@ Rails.application.routes.draw do
 
     # Interactive components (modals, buttons, etc.)
     post "interactions" => "interactions#receive"
+
+    # Messages API for real-time updates
+    get "messages/:channel_id/latest", to: "messages#latest"
+  end
+
+  # Public API for web frontend (not from Slack)
+  namespace :api do
+    get "messages/:channel_id/latest", to: "messages#latest"
   end
 
   # Incidents management

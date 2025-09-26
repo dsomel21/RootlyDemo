@@ -19,22 +19,286 @@
      - Graceful degradation built-in
 -%>
 
-<div class="min-h-screen bg-gray-50">
+<% 
+  # Find the most recently declared ACTIVE incident
+  active_incidents = @incidents.select { |incident| ['investigating', 'identified', 'monitoring'].include?(incident.status) }
+  @active_incident = active_incidents.min_by(&:declared_at) if active_incidents.any?
+%>
+
+<div class="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black">
+  <% if @active_incident %>
+    <!-- Active Incident Banner -->
+    <div class="w-full max-w-7xl mx-auto px-4 py-8">
+      <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-950 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]">
+        <!-- Bottom Glow Animation -->
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-1 w-3/4 bg-gradient-to-r from-transparent via-red-500 to-transparent rounded-full opacity-0" 
+             style="animation: bottomGlow 2s ease-in-out infinite;"></div>
+        <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-full h-3 bg-red-500/30 blur-md rounded-[50%] opacity-0" 
+             style="animation: bottomGlowBlur 2s ease-in-out infinite;"></div>
+        <!-- ACTIVE badge with neon red halo -->
+        <div class="relative inline-flex items-center rounded-full px-4 py-2 select-none">
+          <span class="absolute -inset-4 rounded-full opacity-90 blur-2xl pointer-events-none"
+                style="background: radial-gradient(60% 60% at 30% 50%, rgba(239,68,68,0.58), transparent 60%); box-shadow: 0 0 40px rgba(239,68,68,.55), 0 0 80px rgba(239,68,68,.35);"></span>
+          <span class="relative inline-flex items-center rounded-full border border-red-500/40 bg-[rgba(239,68,68,0.10)] px-5 py-1.5 text-sm font-semibold tracking-wide text-red-200">
+            <span class="relative mr-2 inline-flex h-2.5 w-2.5 items-center justify-center">
+              <span class="absolute h-2.5 w-2.5 rounded-full bg-red-500"></span>
+              <span class="absolute h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse"></span>
+            </span>
+            ACTIVE INCIDENT
+          </span>
+        </div>
+
+        <!-- Title & timer -->
+        <div class="mt-5 space-y-2">
+          <h2 class="text-2xl font-semibold leading-snug text-white">#<%= @active_incident.number %> — <%= @active_incident.title %></h2>
+          <p class="text-neutral-400 text-lg">
+            Ongoing for <time class="ml-1 font-mono font-semibold text-white" aria-live="polite" data-start-iso="<%= @active_incident.declared_at.iso8601 %>"><%= distance_of_time_in_words(Time.current, @active_incident.declared_at, include_seconds: false) %></time>
+          </p>
+        </div>
+
+        <!-- CTA row with button + avatars inside same rounded rectangle -->
+        <div class="mt-6">
+          <div class="relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <% if @active_incident.slack_channel %>
+              <%= link_to @active_incident.slack_channel.slack_deep_link,
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                    id: "join-cta",
+                    class: "relative inline-flex items-center gap-2 text-base font-semibold text-white hover:opacity-90 transition" do %>
+                <span class="grid h-6 w-6 place-items-center rounded-md border border-white/10 bg-white/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </span>
+                Join #<%= @active_incident.slack_channel.name %>
+              <% end %>
+            <% else %>
+              <div class="relative inline-flex items-center gap-2 text-base font-semibold text-white opacity-60">
+                <span class="grid h-6 w-6 place-items-center rounded-md border border-white/10 bg-white/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </span>
+                No Slack Channel
+              </div>
+            <% end %>
+            
+            <!-- Participating user avatars -->
+            <div class="relative h-9 w-[4.75rem]">
+              <!-- Starting with default placeholder users -->
+              <div class="absolute right-0 top-0 h-9 w-9 rounded-full border border-white/10 bg-amber-300/80"></div>
+              <div class="absolute right-7 top-0 h-9 w-9 rounded-full border border-white/10 bg-slate-400/70"></div>
+              <div class="absolute right-14 top-0 h-9 w-9 rounded-full border border-white/10 bg-slate-600/70"></div>
+              
+              <!-- Will override with actual users when available -->
+              <% if @active_incident.slack_creator&.avatar_url.present? %>
+                <img src="<%= @active_incident.slack_creator.avatar_url %>" 
+                     alt="<%= @active_incident.slack_creator.display_name || 'User' %>"
+                     class="absolute right-0 top-0 h-9 w-9 rounded-full border border-white/10">
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-time Activity Indicator (Desktop Only) -->
+        <% if @active_incident.slack_channel %>
+          <div id="activity-indicator" class="hidden md:block">
+            <div class="mt-4 max-w-md">
+              <div class="text-xs text-purple-200 mb-2 flex items-center">
+                <svg class="mr-1 h-3 w-3 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Latest activity
+              </div>
+              
+              <!-- Animation container for incoming messages -->
+              <div id="activity-container" class="relative min-h-[3.5rem]">
+                <div id="default-activity" class="text-sm text-gray-400 flex items-center py-2">
+                  <div class="flex items-center">
+                    <div class="w-6 h-6 bg-gray-700 rounded-full border border-gray-600/30 mr-2 flex items-center justify-center">
+                      <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 4a3 3 0 113 3 3 3 0 01-3 3H7a3 3 0 01-3-3 3 3 0 013-3h12z"/>
+                      </svg>
+                    </div>
+                    Watching for messages...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Sheen across the card border -->
+        <span aria-hidden="true" class="pointer-events-none absolute inset-px rounded-[calc(1.5rem-1px)] opacity-20"
+              style="background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.06) 45%, transparent 60%); animation: sheen 7s linear infinite;"></span>
+      </div>
+    </div>
+
+    <style>
+      @keyframes sheen { 0% { transform: translateX(-100%);} 100% { transform: translateX(100%);} }
+      @keyframes rise { 0% { opacity:0; transform: translateY(6px) scale(.985);} 100% { opacity:1; transform: translateY(0) scale(1);} }
+      @keyframes pulseDot { 0% { transform: scale(1); opacity: .8;} 100% { transform: scale(2.1); opacity: 0;} }
+      @keyframes bottomGlow { 0%, 100% { opacity: 0; } 50% { opacity: 0.8; } }
+      @keyframes bottomGlowBlur { 0%, 100% { opacity: 0; transform: translateX(-50%) scale(0.8); } 50% { opacity: 0.6; transform: translateX(-50%) scale(1.1); } }
+      @keyframes pulseSlow { 0%, 100% { opacity: 0; } 50% { opacity: 0.3; } }
+      @keyframes pulseSubtle { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+      @keyframes pulseSubtleGreen { 0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.3); } 50% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); } }
+      @keyframes pulseSubtleOrange { 0%, 100% { box-shadow: 0 0 5px rgba(249, 115, 22, 0.3); } 50% { box-shadow: 0 0 15px rgba(249, 115, 22, 0.6); } }
+      
+      @keyframes messageSlideIn { 
+        0% { opacity:0; transform: translateY(-8px) scale(0.95); } 
+        100% { opacity:1; transform: translateY(0) scale(1); } 
+      }
+      @keyframes messageSlideOut { 
+        0% { opacity:1; transform: translateY(0) scale(1); } 
+        100% { opacity:0; transform: translateY(-8px) scale(0.95); } 
+      }
+      
+      .animate-pulse-slow { animation: pulseSlow 3s ease-in-out infinite; }
+      .animate-pulse-subtle { animation: pulseSubtle 2s ease-in-out infinite; }
+      .animate-pulse-subtle-green { animation: pulseSubtleGreen 2s ease-in-out infinite; }
+      .animate-pulse-subtle-orange { animation: pulseSubtleOrange 2s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+      }
+    </style>
+
+    <script>
+      (function () {
+        var el = document.querySelector('[data-start-iso]');
+        if (!el) return;
+        var iso = el.getAttribute('data-start-iso');
+        var startEpoch = iso ? Math.floor(new Date(iso).getTime() / 1000) : null;
+        if (!startEpoch) return;
+        
+        function fmt(n){ return (n < 10 ? '0' : '') + n; }
+        function draw(total){
+          var h = Math.floor(total / 3600);
+          var m = Math.floor((total % 3600) / 60);
+          var s = total % 60;
+          el.textContent = fmt(h) + ':' + fmt(m) + ':' + fmt(s);
+        }
+        function tick(){
+          var t = Math.max(0, Math.floor(Date.now() / 1000) - startEpoch);
+          draw(t);
+        }
+        tick();
+        setInterval(tick, 1000);
+      })();
+      
+      // Activity observer for desktop-only real-time messages
+      (function(){
+        var isActive = <%= (@incidents.select { |incident| ['investigating', 'identified', 'monitoring'].include?(incident.status) }.any?) %>
+        if (!isActive || window.innerWidth < 768) return;
+        
+        var lastProcessedTimestamp = null;
+        var messageContainer = document.getElementById('activity-container');
+        var defaultActivity = document.getElementById('default-activity');
+        if (!messageContainer) return;
+        
+        // Track whether user is on active incidents page
+        var observerActive = false;
+        var activityObserver = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            observerActive = entry.isIntersecting;
+            console.log('Active incident banner visible:', observerActive);
+          });
+        });
+        var bannerEl = document.querySelector('[data-start-iso]');
+        if (bannerEl) {
+          activityObserver.observe(bannerEl);
+        }
+        
+        // Function to create activity message element
+        function createActivityElement(message, author) {
+          var activityItem = document.createElement('div');
+          activityItem.className = 'message-activity absolute inset-0 flex items-start gap-2 opacity-0 translate-y-[-8px] bg-neutral-950/95 backdrop-blur-sm rounded-xl px-3 py-2 border border-purple-500/20';
+          activityItem.style.animation = 'messageSlideIn 0.4s ease-out forwards';
+          
+          var avatarDiv = document.createElement('div');
+          avatarDiv.className = 'flex-shrink-0';
+          var img = document.createElement('img');
+          img.src = author.avatar;
+          img.alt = author.name;
+          img.className = 'w-6 h-6 rounded-full border border-purple-400/30';
+          avatarDiv.appendChild(img);
+          
+          var contentDiv = document.createElement('div');
+          contentDiv.className = 'flex-1 min-w-0';
+          contentDiv.innerHTML = 
+            '<div class="text-xs text-purple-300 font-medium">' + author.name + '</div>' +
+            '<div class="text-sm text-white mt-1">' + message.text.substr(0,80) + (message.text.length > 80 ? '...' : '') + '</div>';
+          activityItem.appendChild(avatarDiv);
+          activityItem.appendChild(contentDiv);
+          return activityItem;
+        }
+        
+        // Function to update the latest activity
+        function updateActivity(message, author) {
+          if (!observerActive || !messageContainer) return;
+          
+          // Hide default message
+          if (defaultActivity) defaultActivity.style.display = 'none';
+          
+          // Create and append message
+          var activityEl = createActivityElement(message, author);
+          messageContainer.appendChild(activityEl);
+          
+          // Auto-fade after 4 seconds
+          setTimeout(function() {
+            activityEl.style.animation = 'messageSlideOut 0.4s ease-in forwards';
+            setTimeout(function() {
+              try { activityEl.remove(); } catch(e) {} // Graceful cleanup
+              // Reset to default if no more messages
+              if (defaultActivity && messageContainer.children.length <= 0) {
+                defaultActivity.style.display = 'flex';
+              }
+            }, 400);
+          }, 4000);
+        }
+        
+        function pollLatestMessage() {
+          var channelId = '<%= @active_incident&.slack_channel&.id %>';
+          if (!channelId) return;
+          
+          fetch('/api/messages/' + channelId + '/latest', {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+          })
+          .then(resp=>resp.ok ? resp.json() : Promise.reject(resp.status))
+          .then(data => {
+            if(data.isSuccess && data.latest && (!lastProcessedTimestamp || data.latest.timestamp > lastProcessedTimestamp)) {
+              lastProcessedTimestamp = data.latest.timestamp;
+              updateActivity(data.latest, data.author);
+            }
+          })
+          .catch(err => console.debug('Poll error (ignored):', err));
+        }
+        
+        if(window.activityPollingStarted) return; // Prevents double-activity
+        window.activityPollingStarted = true;
+        
+        // Poll every 8 seconds to be gentle on servers
+        setInterval(pollLatestMessage, 8000);
+        console.log("🤖 Real-time activity polling started for desktop.");
+      })();
+    </script>
+  <% end %>
   <!-- Page Header -->
-  <div class="bg-white shadow">
+  <div class="bg-gradient-to-r from-gray-950/90 via-slate-950/90 to-black/90 backdrop-blur-sm border-b border-purple-500/30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="py-6">
         <div class="md:flex md:items-center md:justify-between">
           <div class="flex-1 min-w-0">
-            <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+            <h1 class="text-2xl font-bold leading-7 text-white sm:text-3xl sm:truncate">
               🚨 Incidents Dashboard
             </h1>
-            <p class="mt-1 text-sm text-gray-500">
+            <p class="mt-1 text-sm text-purple-200">
               Manage and track all incidents across your organization
             </p>
           </div>
           <div class="mt-4 flex md:mt-0 md:ml-4">
-            <span class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white">
+            <span class="inline-flex items-center px-3 py-2 border border-purple-400/30 rounded-md text-sm text-white bg-purple-900/30">
               Total: <%= @incidents.count %> incidents
             </span>
           </div>
@@ -44,7 +308,9 @@
   </div>
 
   <!-- Main Content -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+    <!-- Grid Background Pattern -->
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(139,92,246,0.3)_1px,transparent_1px),linear-gradient(to_bottom,rgba(139,92,246,0.3)_1px,transparent_1px)] bg-[size:20px_20px] opacity-10 -z-10"></div>
     <%# 
       TURBO FRAME EXPLANATION:
       
@@ -65,11 +331,11 @@
       - URLs are shareable and bookmarkable
     %>
     <%= turbo_frame_tag "incidents_list" do %>
-      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+      <div class="bg-gray-950/80 backdrop-blur-sm border border-purple-500/30 shadow-xl overflow-hidden sm:rounded-2xl">
         <!-- Sort Controls -->
-        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 sm:px-6">
+        <div class="bg-gray-950/60 px-4 py-3 border-b border-purple-500/30 sm:px-6">
           <div class="flex flex-wrap items-center justify-between">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
+            <h3 class="text-lg leading-6 font-medium text-white">
               Incidents List
             </h3>
             
@@ -90,11 +356,11 @@
               
               The links target the same frame they're in, so Turbo knows to update this frame.
             %>
-            <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
-              <span class="text-sm text-gray-500">Sort by:</span>
+            <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+              <span class="text-sm text-purple-200 flex items-center">Sort by:</span>
               
               <%= link_to sort_url(:title), 
-                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:title) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:title) ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border border-gray-600/30'}" do %>
                 Title 
                 <% if sorted_by?(:title) %>
                   <%= sort_direction_for(:title) == :asc ? "↑" : "↓" %>
@@ -102,7 +368,7 @@
               <% end %>
               
               <%= link_to sort_url(:severity), 
-                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:severity) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:severity) ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border border-gray-600/30'}" do %>
                 Severity 
                 <% if sorted_by?(:severity) %>
                   <%= sort_direction_for(:severity) == :asc ? "↑" : "↓" %>
@@ -110,7 +376,7 @@
               <% end %>
               
               <%= link_to sort_url(:status), 
-                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:status) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:status) ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border border-gray-600/30'}" do %>
                 Status 
                 <% if sorted_by?(:status) %>
                   <%= sort_direction_for(:status) == :asc ? "↑" : "↓" %>
@@ -118,7 +384,7 @@
               <% end %>
               
               <%= link_to sort_url(:created_at), 
-                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:created_at) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" do %>
+                    class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{sorted_by?(:created_at) ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border border-gray-600/30'}" do %>
                 Created 
                 <% if sorted_by?(:created_at) %>
                   <%= sort_direction_for(:created_at) == :asc ? "↑" : "↓" %>
@@ -130,64 +396,138 @@
 
         <!-- Incidents List -->
         <% if @incidents.any? %>
-          <ul class="divide-y divide-gray-200">
+          <div class="grid gap-6 p-6">
             <% @incidents.each do |incident| %>
-              <%# 
-                INCIDENT ROW COMPONENT:
-                Each incident is rendered as a list item with rich information.
-                We could extract this to a partial or ViewComponent for reusability.
+              <% 
+                # Determine card styling based on status
+                is_active = ['investigating', 'identified', 'monitoring'].include?(incident.status)
+                
+                # Severity border colors
+                severity_border = case incident.severity
+                when 'sev0' then 'border-red-500'
+                when 'sev1' then 'border-orange-500' 
+                else 'border-yellow-500'
+                end
+                
+                # Only add glow effect for ACTIVE incidents - not by severity
+                severity_glow = ''
               %>
-              <li class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors duration-150">
-                <div class="flex items-center justify-between">
-                  <div class="flex-1 min-w-0">
-                    <!-- Incident Header -->
+              
+              <!-- Incident Card -->
+              <div class="group relative overflow-hidden rounded-xl border <%= severity_border %> bg-gray-900/50 backdrop-blur-sm hover:bg-gray-800/60 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl <%= severity_glow %> <%= is_active ? 'shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse-subtle' : '' %>">
+                
+                <% if is_active %>
+                  <!-- Active incident pulse overlay -->
+                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent opacity-0 <%= is_active ? 'animate-pulse-slow' : '' %>"></div>
+                <% end %>
+                
+                <!-- Glass morphism sheen -->
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                
+                <div class="relative p-6">
+                  <!-- Card Header -->
+                  <div class="flex items-start justify-between mb-4">
                     <div class="flex items-center space-x-3">
-                      <div class="flex-shrink-0">
-                        <%# Severity Badge %>
-                        <% severity_class = case incident.severity
-                             when 'sev0' then 'bg-red-100 text-red-800'
-                             when 'sev1' then 'bg-orange-100 text-orange-800' 
-                             else 'bg-yellow-100 text-yellow-800'
+                      <!-- Severity Badge with Enhanced Styling -->
+                      <% severity_pill_class = case incident.severity
+                           when 'sev0' then 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-200 border-red-400/50'
+                           when 'sev1' then 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-200 border-orange-400/50'
+                           else 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-200 border-yellow-400/50'
                              end %>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= severity_class %>">
+                      <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold <%= severity_pill_class %> border">
                           <%= incident.severity&.upcase || 'SEV2' %>
                         </span>
-                      </div>
                       
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center space-x-2">
-                          <h3 class="text-sm font-medium text-gray-900 truncate">
-                            #<%= incident.number %> - <%= incident.title %>
-                          </h3>
-                          
-                          <%# Status Badge %>
-                          <% status_class = case incident.status
-                               when 'resolved' then 'bg-green-100 text-green-800'
-                               when 'monitoring' then 'bg-blue-100 text-blue-800'
-                               when 'identified' then 'bg-purple-100 text-purple-800'
-                               else 'bg-gray-100 text-gray-800'
+                      <!-- Status Badge with Animation -->
+                      <% status_pill_class = case incident.status
+                           when 'resolved' then 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-200 border-green-400/50'
+                           when 'monitoring' then 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-200 border-blue-400/50'
+                           when 'identified' then 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 text-purple-200 border-purple-400/50'
+                           else 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 text-gray-200 border-gray-400/50'
                                end %>
-                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= status_class %>">
+                      <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium <%= status_pill_class %> border">
                             <%= incident.status&.capitalize || 'Unknown' %>
                           </span>
                         </div>
+                    
+                    <!-- Time Badge -->
+                    <div class="flex items-center text-xs text-gray-400">
+                      <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <%= time_ago_in_words(incident.created_at) %> ago
+                    </div>
+                  </div>
+                  
+                  <!-- Card Content -->
+                  <div class="mb-6">
+                    <!-- Title with proper hierarchy -->
+                    <h3 class="text-lg font-bold text-white mb-2 leading-tight">
+                      <span class="text-gray-400 font-mono text-sm mr-2">#<%= incident.number %></span>
+                      <span class="<%= is_active ? 'text-red-200' : '' %>"><%= incident.title %></span>
+                    </h3>
                         
                         <!-- Description -->
                         <% if incident.description.present? %>
-                          <p class="mt-1 text-sm text-gray-500 line-clamp-2">
-                            <%= truncate(incident.description, length: 120) %>
-                          </p>
+                      <p class="text-gray-300 text-sm leading-relaxed line-clamp-3">
+                        <%= incident.description %>
+                      </p>
+                    <% end %>
+                  </div>
+                  
+                  <!-- Collaborator Presence -->
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                      <span class="text-xs text-gray-400 mr-3">Team:</span>
+                      
+                      <!-- Commander Avatar -->
+                      <div class="flex -space-x-2">
+                        <% if incident.slack_creator&.avatar_url.present? %>
+                          <img src="<%= incident.slack_creator.avatar_url %>" 
+                               alt="<%= incident.slack_creator.display_name || 'Commander' %>" 
+                               class="w-8 h-8 rounded-full border-2 border-gray-700 bg-gray-800 hover:scale-110 transition-transform duration-200">
+                        <% else %>
+                          <div class="w-8 h-8 rounded-full border-2 border-gray-700 bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white">
+                            <%= (incident.slack_creator&.display_name&.first || 'U').upcase %>
+                          </div>
                         <% end %>
                         
-                        <!-- Metadata -->
-                        <div class="mt-2 flex items-center text-xs text-gray-500 space-x-4">
-                          <span class="flex items-center">
-                            <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <!-- Additional team members placeholder -->
+                        <div class="w-8 h-8 rounded-full border-2 border-gray-700 bg-gray-600 flex items-center justify-center text-xs font-bold text-white">
+                          +2
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Contextual CTA Button -->
+                    <div class="flex items-center space-x-2">
+                      <% if incident.slack_channel %>
+                        <%= link_to incident.slack_channel.slack_deep_link, 
+                              target: "_blank", 
+                              rel: "noopener noreferrer",
+                              class: "inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-green-600/20 text-green-300 hover:bg-green-600/40 transition-colors duration-150 border border-green-400/50 hover:shadow-lg" do %>
+                          <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z"/>
+                          </svg>
+                          #<%= incident.slack_channel.name %>
+                        <% end %>
+                      <% end %>
+                      
+                      <% contextual_cta = incident.status == 'resolved' ? 'Review Postmortem' : 'Open Incident' %>
+                      <%= link_to "/incidents/#{incident.slug}", 
+                            class: "inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white #{incident.status == 'resolved' ? 'bg-purple-600/20 hover:bg-purple-600/40 border border-purple-400/50' : 'bg-red-600/20 hover:bg-red-600/40 border border-red-400/50'} transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500",
+                            data: { turbo_frame: "_top" } do %>
+                        <%= contextual_cta %>
+                        <svg class="ml-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
-                            <%= time_ago_in_words(incident.created_at) %> ago
-                          </span>
+                      <% end %>
+                    </div>
+                  </div>
                           
+                  <!-- Metadata Footer -->
+                  <div class="mt-4 pt-4 border-t border-gray-700/50 flex items-center justify-between text-xs text-gray-400">
+                    <div class="flex items-center space-x-4">
                           <% if incident.slack_creator %>
                             <span class="flex items-center">
                               <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,55 +539,44 @@
                             </span>
                           <% end %>
                           
-                          <% if incident.organization %>
-                            <span class="flex items-center">
+                          <!-- Time to resolve metric for RESOLVED incidents -->
+                          <% if incident.status == 'resolved' && incident.declared_at && incident.resolved_at %>
+                            <%
+                              duration_seconds = incident.resolved_duration_seconds
+                              hours = duration_seconds / 3600
+                              minutes = (duration_seconds % 3600) / 60
+                              
+                              # Format the exact duration
+                              if hours > 0
+                                duration_text = "#{hours}h #{minutes}m"
+                              elsif minutes > 0
+                                duration_text = "#{minutes}m"
+                              else
+                                duration_text = "<1m"
+                              end
+                            %>
+                            <span class="flex items-center text-gray-300">
                               <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h2M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                               </svg>
-                              <%= incident.organization.name %>
+                               Resolved in&nbsp;<span class="font-bold"><%= duration_text %></span>
                             </span>
                           <% end %>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
-                  <!-- Actions -->
-                  <div class="flex-shrink-0 flex items-center space-x-2">
-                    <% if incident.slack_channel %>
-                      <%= link_to incident.slack_channel.slack_deep_link, 
-                            target: "_blank", 
-                            rel: "noopener noreferrer",
-                            class: "inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors duration-150" do %>
-                        <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
-                        </svg>
-                        #<%= incident.slack_channel.name %>
-                      <% end %>
-                    <% end %>
-                    
-                    <%= link_to "/incidents/#{incident.slug}", 
-                          class: "inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500",
-                          data: { turbo_frame: "_top" } do %>
-                      View Details
-                      <svg class="ml-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                      </svg>
-                    <% end %>
-                  </div>
-                </div>
-              </li>
             <% end %>
-          </ul>
+          </div>
         <% else %>
           <!-- Empty State -->
           <div class="text-center py-12">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+            <svg class="mx-auto h-12 w-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 48 48">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M34 40h10v-4a6 6 0 00-10.712-3.714M34 40H14m20 0v-4a9.971 9.971 0 00-.712-3.714M14 40H4v-4a6 6 0 0110.712-3.714M14 40v-4a9.971 9.971 0 01.712-3.714M28 16a4 4 0 11-8 0 4 4 0 018 0zm-4 8a5 5 0 00-5 5v4h10v-4a5 5 0 00-5-5z"></path>
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No incidents found</h3>
-            <p class="mt-1 text-sm text-gray-500">
-              Get started by creating your first incident through Slack with <code>/rootly declare</code>
+            <h3 class="mt-2 text-sm font-medium text-white">No incidents found</h3>
+            <p class="mt-1 text-sm text-gray-400">
+              Get started by creating your first incident through Slack with <code class="bg-gray-800 px-2 py-1 rounded text-purple-300">/rootly declare</code>
             </p>
           </div>
         <% end %>
