@@ -1,4 +1,25 @@
 module Slack
+  # Routes different types of Slack interactions to appropriate handlers
+  #
+  # IMPORTANT: SLACK MODAL BEHAVIOR NOTES
+  # ====================================
+  #
+  # Slack only sends `view_closed` events in specific cases:
+  # - When the modal is closed programmatically via API
+  # - Due to certain system events or timeouts
+  # - NOT when users click the "Cancel" button or close button (X)
+  #
+  # When users click "Cancel" or "X":
+  # - Slack simply closes the modal client-side
+  # - No event is sent to your endpoint
+  # - This is by design - Slack assumes "Cancel" means "do nothing"
+  # - No server interaction is needed for user-initiated cancellations
+  #
+  # Therefore, we only handle:
+  # - view_submission: When users submit forms (click primary action button)
+  # - block_actions: When users interact with buttons, dropdowns, etc.
+  #
+  # We do NOT handle view_closed events because they're unreliable for user actions.
   class InteractionRouter
     def self.route(interaction_type, payload)
       case interaction_type
@@ -28,6 +49,7 @@ module Slack
         { action: :unknown_modal, callback_id: callback_id, payload: payload }
       end
     end
+
 
     def self.route_block_actions(payload)
       # Future: Route different button/dropdown actions

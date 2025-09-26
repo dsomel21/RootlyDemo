@@ -1,4 +1,13 @@
 module BlockKits
+  # Builds the incident declaration modal using Slack's Block Kit format
+  #
+  # MODAL BEHAVIOR NOTES:
+  # ====================
+  # - submit: "Declare" button triggers view_submission event to our server
+  # - close: "Cancel" button closes modal client-side (no server request)
+  # - Users can also close with "X" button or ESC key (no server request)
+  #
+  # This is standard Slack behavior - only form submissions need server interaction.
   class DeclareModal
     def self.build(title:, trigger_id:)
       {

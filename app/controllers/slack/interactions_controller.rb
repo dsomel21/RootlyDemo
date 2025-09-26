@@ -7,6 +7,18 @@ class Slack::InteractionsController < Slack::BaseController
   # - User selects from a dropdown
   # - Any interactive element in your Slack app
   #
+  # IMPORTANT: MODAL CANCELLATION BEHAVIOR
+  # =====================================
+  # When users click "Cancel" or the "X" button on modals:
+  # - Slack closes the modal client-side immediately
+  # - NO request is sent to this endpoint
+  # - This is normal Slack behavior - cancellation needs no server action
+  # - Users get immediate visual feedback (modal disappears)
+  #
+  # We only receive requests when users:
+  # - Submit forms (view_submission)
+  # - Click interactive elements like buttons/dropdowns (block_actions)
+  #
   # RESPONSIBILITY:
   # - Receive form data from modals
   # - Validate the data
