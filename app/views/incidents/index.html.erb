@@ -100,33 +100,6 @@
           </div>
         </div>
 
-        <!-- Real-time Activity Indicator (Desktop Only) -->
-        <% if @active_incident.slack_channel %>
-          <div id="activity-indicator" class="hidden md:block">
-            <div class="mt-4 max-w-md">
-              <div class="text-xs text-purple-200 mb-2 flex items-center">
-                <svg class="mr-1 h-3 w-3 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                Latest activity
-              </div>
-              
-              <!-- Animation container for incoming messages -->
-              <div id="activity-container" class="relative min-h-[3.5rem]">
-                <div id="default-activity" class="text-sm text-gray-400 flex items-center py-2">
-                  <div class="flex items-center">
-                    <div class="w-6 h-6 bg-gray-700 rounded-full border border-gray-600/30 mr-2 flex items-center justify-center">
-                      <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 4a3 3 0 113 3 3 3 0 01-3 3H7a3 3 0 01-3-3 3 3 0 013-3h12z"/>
-                      </svg>
-                    </div>
-                    Watching for messages...
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        <% end %>
 
         <!-- Sheen across the card border -->
         <span aria-hidden="true" class="pointer-events-none absolute inset-px rounded-[calc(1.5rem-1px)] opacity-20"
@@ -145,14 +118,6 @@
       @keyframes pulseSubtleGreen { 0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.3); } 50% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); } }
       @keyframes pulseSubtleOrange { 0%, 100% { box-shadow: 0 0 5px rgba(249, 115, 22, 0.3); } 50% { box-shadow: 0 0 15px rgba(249, 115, 22, 0.6); } }
       
-      @keyframes messageSlideIn { 
-        0% { opacity:0; transform: translateY(-8px) scale(0.95); } 
-        100% { opacity:1; transform: translateY(0) scale(1); } 
-      }
-      @keyframes messageSlideOut { 
-        0% { opacity:1; transform: translateY(0) scale(1); } 
-        100% { opacity:0; transform: translateY(-8px) scale(0.95); } 
-      }
       
       .animate-pulse-slow { animation: pulseSlow 3s ease-in-out infinite; }
       .animate-pulse-subtle { animation: pulseSubtle 2s ease-in-out infinite; }
@@ -186,102 +151,6 @@
         setInterval(tick, 1000);
       })();
       
-      // Activity observer for desktop-only real-time messages
-      (function(){
-        var isActive = <%= (@incidents.select { |incident| ['investigating', 'identified', 'monitoring'].include?(incident.status) }.any?) %>
-        if (!isActive || window.innerWidth < 768) return;
-        
-        var lastProcessedTimestamp = null;
-        var messageContainer = document.getElementById('activity-container');
-        var defaultActivity = document.getElementById('default-activity');
-        if (!messageContainer) return;
-        
-        // Track whether user is on active incidents page
-        var observerActive = false;
-        var activityObserver = new IntersectionObserver(function(entries) {
-          entries.forEach(function(entry) {
-            observerActive = entry.isIntersecting;
-            console.log('Active incident banner visible:', observerActive);
-          });
-        });
-        var bannerEl = document.querySelector('[data-start-iso]');
-        if (bannerEl) {
-          activityObserver.observe(bannerEl);
-        }
-        
-        // Function to create activity message element
-        function createActivityElement(message, author) {
-          var activityItem = document.createElement('div');
-          activityItem.className = 'message-activity absolute inset-0 flex items-start gap-2 opacity-0 translate-y-[-8px] bg-neutral-950/95 backdrop-blur-sm rounded-xl px-3 py-2 border border-purple-500/20';
-          activityItem.style.animation = 'messageSlideIn 0.4s ease-out forwards';
-          
-          var avatarDiv = document.createElement('div');
-          avatarDiv.className = 'flex-shrink-0';
-          var img = document.createElement('img');
-          img.src = author.avatar;
-          img.alt = author.name;
-          img.className = 'w-6 h-6 rounded-full border border-purple-400/30';
-          avatarDiv.appendChild(img);
-          
-          var contentDiv = document.createElement('div');
-          contentDiv.className = 'flex-1 min-w-0';
-          contentDiv.innerHTML = 
-            '<div class="text-xs text-purple-300 font-medium">' + author.name + '</div>' +
-            '<div class="text-sm text-white mt-1">' + message.text.substr(0,80) + (message.text.length > 80 ? '...' : '') + '</div>';
-          activityItem.appendChild(avatarDiv);
-          activityItem.appendChild(contentDiv);
-          return activityItem;
-        }
-        
-        // Function to update the latest activity
-        function updateActivity(message, author) {
-          if (!observerActive || !messageContainer) return;
-          
-          // Hide default message
-          if (defaultActivity) defaultActivity.style.display = 'none';
-          
-          // Create and append message
-          var activityEl = createActivityElement(message, author);
-          messageContainer.appendChild(activityEl);
-          
-          // Auto-fade after 4 seconds
-          setTimeout(function() {
-            activityEl.style.animation = 'messageSlideOut 0.4s ease-in forwards';
-            setTimeout(function() {
-              try { activityEl.remove(); } catch(e) {} // Graceful cleanup
-              // Reset to default if no more messages
-              if (defaultActivity && messageContainer.children.length <= 0) {
-                defaultActivity.style.display = 'flex';
-              }
-            }, 400);
-          }, 4000);
-        }
-        
-        function pollLatestMessage() {
-          var channelId = '<%= @active_incident&.slack_channel&.id %>';
-          if (!channelId) return;
-          
-          fetch('/api/messages/' + channelId + '/latest', {
-            method: "GET",
-            headers: { "Accept": "application/json" }
-          })
-          .then(resp=>resp.ok ? resp.json() : Promise.reject(resp.status))
-          .then(data => {
-            if(data.isSuccess && data.latest && (!lastProcessedTimestamp || data.latest.timestamp > lastProcessedTimestamp)) {
-              lastProcessedTimestamp = data.latest.timestamp;
-              updateActivity(data.latest, data.author);
-            }
-          })
-          .catch(err => console.debug('Poll error (ignored):', err));
-        }
-        
-        if(window.activityPollingStarted) return; // Prevents double-activity
-        window.activityPollingStarted = true;
-        
-        // Poll every 8 seconds to be gentle on servers
-        setInterval(pollLatestMessage, 8000);
-        console.log("🤖 Real-time activity polling started for desktop.");
-      })();
     </script>
   <% end %>
   <!-- Page Header -->
