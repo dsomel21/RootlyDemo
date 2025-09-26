@@ -49,6 +49,13 @@ class Incident < ApplicationRecord
     (resolved_at - declared_at).to_i
   end
 
+  # Generate a URL-friendly slug for the incident
+  # Example: "Database down" becomes "database-down-uuid"
+  def slug
+    title_parameterized = title.parameterize(preserve_case: :lower, separator: "-")
+    "#{title_parameterized}-#{id}"
+  end
+
   private
 
   def resolved_at_after_declared_at

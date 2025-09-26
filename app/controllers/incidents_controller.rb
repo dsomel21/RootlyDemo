@@ -41,9 +41,25 @@ class IncidentsController < ApplicationController
     end
   end
 
-  # GET /incidents/:id
+  # GET /incidents/:id or /incidents/:slug
   def show
-    @incident = Incident.find(params[:id])
+    id_or_slug = params[:id] || params[:slug]
+
+    # Try to find by UUID first (pure UUID format: 69eb53f0-7e55-4039-a10f-cbf144474066)
+    if id_or_slug.match?(/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i)
+      @incident = Incident.find(id_or_slug)
+    else
+      # Try to find by slug (format: title-uuid-uuid)
+      # Split on hyphen and take last 5 parts (UUID components split by hyphens)
+      slug_parts = id_or_slug.split("-")
+      if slug_parts.length >= 5
+        # Extract UUID from slug (last 5 hyphenated parts)
+        uuid = slug_parts.last(5).join("-")
+        @incident = Incident.find(uuid)
+      else
+        raise ActiveRecord::RecordNotFound
+      end
+    end
   end
 
   private

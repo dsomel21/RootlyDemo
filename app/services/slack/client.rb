@@ -30,6 +30,15 @@ module Slack
     # Get conversation history (messages) from a channel
     def conversations_history(payload) = post("conversations.history", payload)
 
+    # Set channel topic
+    def conversations_setTopic(payload) = post("conversations.setTopic", payload)
+
+    # Set channel purpose/description
+    def conversations_setPurpose(payload) = post("conversations.setPurpose", payload)
+
+    # Pin a message to channel
+    def pins_add(payload) = post("pins.add", payload)
+
     private
 
     def post(path, payload)

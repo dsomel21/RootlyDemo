@@ -27,6 +27,9 @@ Rails.application.routes.draw do
   # Incidents management
   resources :incidents, only: [ :index, :show ]
 
+  # Slug-based URLs work alongside regular show routes
+  get "incidents/:slug", to: "incidents#show"
+
   # Sidekiq Web UI for monitoring background jobs
   require "sidekiq/web"
   mount Sidekiq::Web => "/sidekiq"

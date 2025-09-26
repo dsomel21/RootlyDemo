@@ -16,11 +16,12 @@ module Slack
           create_incident_record
           create_dedicated_slack_channel
           link_incident_to_slack_channel
-                 invite_creator_to_channel
-                 post_welcome_message_to_channel
-                 enqueue_profile_message_job
-               end
-               build_success_response
+          invite_creator_to_channel
+          post_welcome_message_to_channel
+        end
+        enqueue_job_for_sending_image_of_incident_commander_to_slack_channel
+        enqueue_channel_metadata_update
+        build_success_response
       rescue => e
         Rails.logger.error "Failed to create incident: #{e.message}"
         build_error_response(e.message)
@@ -63,11 +64,14 @@ module Slack
       def find_or_create_slack_user
         @slack_user = organization.slack_users.find_or_initialize_by(slack_user_id: slack_user_id)
 
-        # Always save the user record first (needed for the background job)
+        # Always save the user record and mark as saved for testing
         if @slack_user.new_record?
           @slack_user.save!
           Rails.logger.info "Created new SlackUser record for #{slack_user_id}"
         end
+
+        # Ensure user record is persisted before proceeding
+        @slack_user.reload if @slack_user.persisted?
 
         # Enqueue background job to fetch/update profile if needed
         if should_update_profile?
@@ -76,6 +80,12 @@ module Slack
         end
 
         Rails.logger.info "Found/created Slack user: #{@slack_user.display_name || @slack_user.real_name || slack_user_id}"
+
+        # Double-check we have a persisted SlackUser for the creator
+        unless @slack_user.persisted?
+          Rails.logger.error "Failed to persist SlackUser for #{slack_user_id}"
+          raise StandardError, "SlackUser not saved properly"
+        end
       end
 
       # Determine if we should update the user's profile
@@ -139,11 +149,18 @@ module Slack
           users: slack_user_id
         })
 
-        Rails.logger.info "Invited creator #{slack_user_id} to incident channel"
+        Rails.logger.info "Added creator #{slack_user_id} to incident channel"
       rescue => e
         # Don't fail the entire incident creation if invite fails
-        Rails.logger.warn "Failed to invite creator to channel: #{e.message}"
+        Rails.logger.warn "Failed to add creator to channel: #{e.message}"
       end
+
+      # TODO: In future, invite key_stakeholders to the channel
+      # def invite_key_stakeholders
+      #   key_stakeholders.each do |stakeholder|
+      #     invite_user_to_channel(stakeholder.slack_user_id)
+      #   end
+      # end
 
       def post_welcome_message_to_channel
         message = build_welcome_message
@@ -151,11 +168,16 @@ module Slack
         Rails.logger.info "Posted welcome message to incident channel"
       end
 
-      def enqueue_profile_message_job
-        # Enqueue job to post user profile message after profile data is fetched
-        # This provides a clear separation of concerns and makes the workflow explicit
+      # Enqueue job to post user profile message after profile data is fetched
+      def enqueue_job_for_sending_image_of_incident_commander_to_slack_channel
         Rails.logger.info "📸 Enqueuing profile message job for incident ##{incident.number}"
         PostUserProfileMessageJob.perform_later(incident.id, slack_user_id)
+      end
+
+      # Enqueue job to update Slack channel metadata (topic, pins, etc.)
+      def enqueue_channel_metadata_update
+        Rails.logger.info "📋 Enqueuing channel metadata update for incident ##{incident.number}"
+        UpdateSlackChannelMetadataJob.perform_later(incident.id)
       end
 
       def build_welcome_message
