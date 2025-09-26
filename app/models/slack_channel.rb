@@ -5,6 +5,13 @@ class SlackChannel < ApplicationRecord
   validates :name, presence: true
   validates :incident_id, uniqueness: true
 
+  # Generate a Slack deep link to open this channel directly in the Slack app
+  # Format: https://app.slack.com/client/{team_id}/{channel_id}
+  def slack_deep_link
+    team_id = incident.organization.slack_installation.team_id
+    "https://app.slack.com/client/#{team_id}/#{slack_channel_id}"
+  end
+
   ##
   # Fetches the entire message history for this channel via the Slack API.
   # This method may perform multiple HTTP requests if the message history is paginated.
