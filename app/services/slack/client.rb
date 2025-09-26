@@ -24,11 +24,11 @@ module Slack
     # Get user information (profile, name, etc.)
     def users_info(user_id) = post("users.info", { user: user_id })
 
-           # List all users in the workspace
-           def users_list(limit: 100) = post("users.list", { limit: limit })
+    # List all users in the workspace
+    def users_list(limit: 100) = post("users.list", { limit: limit })
 
-           # Get conversation history (messages) from a channel
-           def conversations_history(payload) = post("conversations.history", payload)
+    # Get conversation history (messages) from a channel
+    def conversations_history(payload) = post("conversations.history", payload)
 
     private
 
