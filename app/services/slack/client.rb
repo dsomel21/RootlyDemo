@@ -27,7 +27,11 @@ module Slack
     # List all users in the workspace
     def users_list(limit: 100) = post("users.list", { limit: limit })
 
-    # Get conversation history (messages) from a channel
+    # Get conversation history from a channel (includes bot messages, "X Joined the channel", )
+    # NOTE: This is not limited to only Messages. It will include transactional information like:
+    # - "X Joined the channel"
+    # - "X left the channel"
+    # - "set the channel topic: :large_yellow_circle: SEV2 INVESTIGATING"
     def conversations_history(payload) = post("conversations.history", payload)
 
     # Set channel topic
