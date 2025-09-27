@@ -1,6 +1,8 @@
 <%#
   Sorting controls call back into controller helpers for URLs and state.
-  Keeping it in a component makes it easy to extend with new columns later.
+  Each link hits `IncidentsController#index` with new params; Turbo intercepts
+  the click, re-renders only the `incidents_list` frame, and the list gets fresh
+  data without bespoke JavaScript.
 %>
 
 <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
