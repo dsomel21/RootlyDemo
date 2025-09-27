@@ -29,7 +29,7 @@ class IncidentsIndexBehaviorTest < ActionDispatch::IntegrationTest
       title: "Recent Service Degradation",
       number: 3,
       severity: :sev2,
-      status: :investigating,
+      status: :resolved,
       declared_at: 30.minutes.ago
     )
   end
