@@ -1,0 +1,25 @@
+<%#
+  Renders the grid of incident cards including the empty state messaging.
+  Each card is delegated to Incidents::IncidentCardComponent.
+  When no incidents exist yet, we show a "No incidents found" message with
+  a quick tip for declaring the first incident via Slack.
+%>
+
+<% if incidents? %>
+  <div class="grid gap-6 p-6">
+    <% incidents.each do |incident| %>
+      <%= render Incidents::IncidentCardComponent.new(incident: incident) %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="text-center py-12">
+    <svg class="mx-auto h-12 w-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M34 40h10v-4a6 6 0 00-10.712-3.714M34 40H14m20 0v-4a9.971 9.971 0 00-.712-3.714M14 40H4v-4a6 6 0 0110.712-3.714M14 40v-4a9.971 9.971 0 01.712-3.714M28 16a4 4 0 11-8 0 4 4 0 018 0zm-4 8a5 5 0 00-5 5v4h10v-4a5 5 0 00-5-5z"></path>
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-white">No incidents found</h3>
+    <p class="mt-1 text-sm text-gray-400">
+      Get started by creating your first incident through Slack with
+      <code class="bg-gray-800 px-2 py-1 rounded text-purple-300">/rootly declare &lt;title&gt;</code>
+    </p>
+  </div>
+<% end %>

@@ -1,0 +1,25 @@
+<%#
+  Sorting controls call back into controller helpers for URLs and state.
+  Keeping it in a component makes it easy to extend with new columns later.
+%>
+
+<div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+  <span class="text-sm text-purple-200 flex items-center">Sort by:</span>
+
+  <% sort_links.each do |column| %>
+    <% active = sorted_by?(column) %>
+    <% klass = if active
+                'bg-purple-500/30 text-purple-200 border border-purple-400/50'
+              else
+                'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 border border-gray-600/30'
+              end %>
+
+    <%= link_to sort_url(column),
+          class: "inline-flex items-center px-2 py-1 text-xs font-medium rounded #{klass}" do %>
+      <%= label_for(column) %>
+      <% if active %>
+        <%= sort_direction_for(column) == :asc ? "↑" : "↓" %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

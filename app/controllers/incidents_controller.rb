@@ -28,6 +28,7 @@ class IncidentsController < ApplicationController
   # 6. User sees smooth transition with no page flash
   def index
     @incidents = fetch_sorted_incidents
+    @active_incidents = @incidents.active
 
     # TURBO FRAME RESPONSE:
     # When a Turbo Frame makes a request, Rails automatically detects it
@@ -41,7 +42,8 @@ class IncidentsController < ApplicationController
     end
   end
 
-  # GET /incidents/:id or /incidents/:slug
+  # GET /incidents/:id
+  # GET /incidents/:slug
   def show
     id_or_slug = params[:id] || params[:slug]
 

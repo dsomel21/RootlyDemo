@@ -1,0 +1,75 @@
+<%#
+  Active banner shows the current active incident with timer and Slack context.
+  Designers can adjust visual treatments here without touching the controller.
+%>
+
+<div class="w-full max-w-7xl mx-auto px-4 py-8">
+  <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-950 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]">
+    <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-1 w-3/4 bg-gradient-to-r from-transparent via-red-500 to-transparent rounded-full opacity-0" 
+         style="animation: bottomGlow 2s ease-in-out infinite;"></div>
+    <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-full h-3 bg-red-500/30 blur-md rounded-[50%] opacity-0" 
+         style="animation: bottomGlowBlur 2s ease-in-out infinite;"></div>
+
+    <div class="relative inline-flex items-center rounded-full px-4 py-2 select-none">
+      <span class="absolute -inset-4 rounded-full opacity-90 blur-2xl pointer-events-none"
+            style="background: radial-gradient(60% 60% at 30% 50%, rgba(239,68,68,0.58), transparent 60%); box-shadow: 0 0 40px rgba(239,68,68,.55), 0 0 80px rgba(239,68,68,.35);"></span>
+      <span class="relative inline-flex items-center rounded-full border border-red-500/40 bg-[rgba(239,68,68,0.10)] px-5 py-1.5 text-sm font-semibold tracking-wide text-red-200">
+        <span class="relative mr-2 inline-flex h-2.5 w-2.5 items-center justify-center">
+          <span class="absolute h-2.5 w-2.5 rounded-full bg-red-500"></span>
+          <span class="absolute h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse"></span>
+        </span>
+        ACTIVE INCIDENT
+      </span>
+    </div>
+
+    <div class="mt-5 space-y-2">
+      <h2 class="text-2xl font-semibold leading-snug text-white">#<%= incident.number %> — <%= incident.title %></h2>
+      <p class="text-neutral-400 text-lg">
+        Ongoing for <time class="ml-1 font-mono font-semibold text-white" aria-live="polite" data-start-iso="<%= timer_start_iso %>"><%= distance_of_time_in_words(Time.current, incident.declared_at, include_seconds: false) %></time>
+      </p>
+    </div>
+
+    <div class="mt-6">
+      <div class="relative flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+        <% if slack_channel %>
+          <%= link_to slack_channel.slack_deep_link,
+                target: "_blank",
+                rel: "noopener noreferrer",
+                id: "join-cta",
+                class: "relative inline-flex items-center gap-2 text-base font-semibold text-white hover:opacity-90 transition" do %>
+            <span class="grid h-6 w-6 place-items-center rounded-md border border-white/10 bg-white/10">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </span>
+            Join #<%= slack_channel.name %>
+          <% end %>
+        <% else %>
+          <div class="relative inline-flex items-center gap-2 text-base font-semibold text-white opacity-60">
+            <span class="grid h-6 w-6 place-items-center rounded-md border border-white/10 bg-white/10">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </span>
+            No Slack Channel
+          </div>
+        <% end %>
+
+        <div class="relative h-9 w-[4.75rem]">
+          <div class="absolute right-0 top-0 h-9 w-9 rounded-full border border-white/10 bg-amber-300/80"></div>
+          <div class="absolute right-7 top-0 h-9 w-9 rounded-full border border-white/10 bg-slate-400/70"></div>
+          <div class="absolute right-14 top-0 h-9 w-9 rounded-full border border-white/10 bg-slate-600/70"></div>
+
+          <% if slack_creator&.avatar_url.present? %>
+            <img src="<%= slack_creator.avatar_url %>"
+                 alt="<%= slack_creator.display_name || 'User' %>"
+                 class="absolute right-0 top-0 h-9 w-9 rounded-full border border-white/10">
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <span aria-hidden="true" class="pointer-events-none absolute inset-px rounded-[calc(1.5rem-1px)] opacity-20"
+          style="background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.06) 45%, transparent 60%); animation: sheen 7s linear infinite;"></span>
+  </div>
+</div>

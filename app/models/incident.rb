@@ -15,6 +15,22 @@ class Incident < ApplicationRecord
 
   validate :resolved_at_after_declared_at
 
+  ACTIVE_STATUSES = %w[investigating identified monitoring].freeze
+
+  scope :active, -> { where(status: ACTIVE_STATUSES) }
+
+  class << self
+    # @return [Array<String>] statuses that constitute an active (unresolved) incident.
+    def active_statuses
+      ACTIVE_STATUSES
+    end
+  end
+
+  # @return [Boolean] true when the incident is still in-flight (pre-resolved).
+  def active?
+    self.class.active_statuses.include?(status)
+  end
+
   ##
   # Computes incident analytics using Slack conversation history.
   #
