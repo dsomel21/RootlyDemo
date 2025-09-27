@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 module Incidents
-  # Wraps the incident list grid (including empty state). Each individual card
-  # is rendered by Incidents::IncidentCardComponent so card layout tweaks stay
-  # focused and testable in isolation.
+  # This component is responsible for rendering the grid of incident cards,
+  # as well as displaying the empty state when there are no incidents.
+  #
+  # Each incident card is rendered using the Incidents::IncidentCardComponent,
+  # allowing card-specific layout and logic to remain encapsulated and easily testable.
   class IncidentListComponent < ApplicationComponent
     def initialize(incidents:)
       @incidents = incidents
