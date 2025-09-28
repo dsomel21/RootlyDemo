@@ -189,16 +189,16 @@ class EpicAnalyticsImageJob < ApplicationJob
   def generate_participant_circles(slack_users, message_counts)
     return "" if slack_users.blank?
 
-    # Center avatars with 120px left gutter
+    # Center avatars with equal spacing across the full card width
     card_width = 1160
-    left_gutter = 120
-    available_width = card_width - left_gutter - 40  # 40px right padding
-    avatar_spacing = available_width / slack_users.length
-    start_x = 60 + left_gutter + (avatar_spacing / 2)
+    card_start_x = 60
+    total_spacing = card_width - (slack_users.length * 100)  # 100px per avatar (50px radius * 2)
+    spacing_between = total_spacing / (slack_users.length + 1)  # +1 for spaces on both sides
+    start_x = card_start_x + spacing_between + 50  # +50 to center the first avatar
 
     slack_users.each_with_index.map do |user, index|
-      x = start_x + (index * avatar_spacing)
-      y = 542  # Moved up 6px from 548
+      x = start_x + (index * (100 + spacing_between))  # 100px avatar width + spacing
+      y = 562  # Moved down 12px from 550
 
       name = sanitize_text(user.display_name || user.real_name || user.slack_user_id, 12)
       message_count = message_counts[user.slack_user_id] || 0
@@ -213,10 +213,10 @@ class EpicAnalyticsImageJob < ApplicationJob
         </defs>
         <circle cx="#{x}" cy="#{y}" r="55" fill="#7B2CBF" opacity="0.25" stroke="#7B2CBF" stroke-width="2"/>
         #{generate_avatar_content(user, x, y, index)}
-        <text x="#{x}" y="#{y+70}" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="14" font-weight="600" dominant-baseline="hanging">
+        <text x="#{x}" y="#{y+46}" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="14" font-weight="600" dominant-baseline="hanging">
           #{name}
         </text>
-        <text x="#{x}" y="#{y+96}" text-anchor="middle" fill="#C7C2DD" font-family="Inter, Montserrat, sans-serif" font-size="12" font-weight="400" dominant-baseline="hanging">
+        <text x="#{x}" y="#{y+60}" text-anchor="middle" fill="#C7C2DD" font-family="Inter, Montserrat, sans-serif" font-size="12" font-weight="400" dominant-baseline="hanging">
           #{safe_message_label}
         </text>
       CIRCLE
@@ -228,20 +228,12 @@ class EpicAnalyticsImageJob < ApplicationJob
     safe_author = sanitize_text(quote[:author], 40)
     return "" if safe_text.blank?
 
-    # Quote pill positioned after avatar gutter, shrunk and shifted right
-    card_width = 1160
-    left_gutter = 120
-    available_width = card_width - left_gutter - 40
-    pill_width = 752  # Reduced by 48px (24px each side)
-    pill_x = 60 + left_gutter + (available_width - pill_width) / 2 + 8  # Shifted right 8px
-
+    # Quote positioned above avatars, centered
     <<~QUOTE.strip
-      <rect x="#{pill_x}" y="598" width="#{pill_width}" height="60" fill="#1B1832" stroke="#7B2CBF" stroke-width="1" rx="15" opacity="0.3"/>
-      <text x="#{pill_x + 20}" y="618" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="20" font-weight="600" opacity="0.6" dominant-baseline="hanging">"</text>
-      <text x="#{pill_x + pill_width/2}" y="628" text-anchor="middle" fill="#E7E3F4" font-family="Inter, Montserrat, sans-serif" font-size="16" font-style="italic" font-weight="500" dominant-baseline="hanging">
-        #{safe_text}
+      <text x="640" y="440" text-anchor="middle" fill="#E7E3F4" font-family="Inter, Montserrat, sans-serif" font-size="18" font-style="italic" font-weight="500" dominant-baseline="hanging">
+        ❝#{safe_text}❞
       </text>
-      <text x="#{pill_x + pill_width/2}" y="648" text-anchor="middle" fill="#C7C2DD" font-family="Inter, Montserrat, sans-serif" font-size="14" font-weight="400" dominant-baseline="hanging">
+      <text x="640" y="470" text-anchor="middle" fill="#C7C2DD" font-family="Inter, Montserrat, sans-serif" font-size="14" font-weight="400" dominant-baseline="hanging">
         — #{safe_author}
       </text>
     QUOTE
