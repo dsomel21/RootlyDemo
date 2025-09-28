@@ -138,10 +138,10 @@ class EpicAnalyticsImageJob < ApplicationJob
 
         <!-- Header Card -->
         <rect x="60" y="60" width="1160" height="120" fill="#151327" stroke="url(#accentGradient)" stroke-width="2" rx="28"/>
-        <text x="100" y="90" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="48" font-weight="700" dominant-baseline="hanging">
+        <text x="100" y="100" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="48" font-weight="700" dominant-baseline="hanging">
           Incident ##{@incident.number}
         </text>
-        <text x="100" y="140" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="24" font-weight="600" dominant-baseline="hanging">
+        <text x="100" y="150" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="24" font-weight="600" dominant-baseline="hanging">
           #{@incident.status&.upcase || 'RESOLVED'}
         </text>
 
@@ -212,7 +212,7 @@ class EpicAnalyticsImageJob < ApplicationJob
           </clipPath>
         </defs>
         <circle cx="#{x}" cy="#{y}" r="55" fill="#7B2CBF" opacity="0.25" stroke="#7B2CBF" stroke-width="2"/>
-        <image href="#{user.avatar_url}" x="#{x-50}" y="#{y-50}" width="100" height="100" clip-path="url(#circle#{index})"/>
+        #{generate_avatar_content(user, x, y, index)}
         <text x="#{x}" y="#{y+70}" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="14" font-weight="600" dominant-baseline="hanging">
           #{name}
         </text>
@@ -245,6 +245,92 @@ class EpicAnalyticsImageJob < ApplicationJob
         — #{safe_author}
       </text>
     QUOTE
+  end
+
+  def generate_avatar_content(user, x, y, index)
+    # Try to get real avatar as data URI, fallback to initials
+    avatar_data_uri = fetch_avatar_as_data_uri(user.avatar_url)
+    initials = generate_initials(user.display_name || user.real_name || user.slack_user_id)
+
+    if avatar_data_uri
+      # Use real avatar
+      "<image href=\"#{avatar_data_uri}\" x=\"#{x-50}\" y=\"#{y-50}\" width=\"100\" height=\"100\" clip-path=\"url(#circle#{index})\"/>"
+    else
+      # Use initials with gradient background
+      <<~AVATAR
+        <defs>
+          <linearGradient id="avatarGrad#{index}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#7B2CBF;stop-opacity:0.8" />
+            <stop offset="100%" style="stop-color:#A461FF;stop-opacity:0.8" />
+          </linearGradient>
+        </defs>
+        <circle cx="#{x}" cy="#{y}" r="50" fill="url(#avatarGrad#{index})"/>
+        <text x="#{x}" y="#{y+6}" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="20" font-weight="700" dominant-baseline="middle">
+          #{initials}
+        </text>
+      AVATAR
+    end
+  end
+
+  def fetch_avatar_as_data_uri(avatar_url)
+    return nil unless avatar_url.present? && avatar_url.start_with?("http")
+
+    begin
+      require "net/http"
+      require "base64"
+
+      uri = URI(avatar_url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.read_timeout = 10
+      http.open_timeout = 10
+
+      request = Net::HTTP::Get.new(uri)
+      response = http.request(request)
+
+      # Follow redirects
+      redirect_count = 0
+      while response.code.start_with?("3") && redirect_count < 5
+        redirect_count += 1
+        location = response["location"]
+        break unless location
+
+        redirect_uri = URI(location)
+        redirect_uri = URI.join(uri, location) if location.start_with?("/")
+
+        http = Net::HTTP.new(redirect_uri.host, redirect_uri.port)
+        http.use_ssl = true
+        http.read_timeout = 10
+        http.open_timeout = 10
+
+        request = Net::HTTP::Get.new(redirect_uri)
+        response = http.request(request)
+      end
+
+      if response.code == "200"
+        content_type = response["content-type"] || "image/jpeg"
+        base64_data = Base64.strict_encode64(response.body)
+        puts "✅ Successfully fetched avatar (#{response.body.length} bytes)"
+        "data:#{content_type};base64,#{base64_data}"
+      else
+        puts "⚠️  Failed to fetch avatar: HTTP #{response.code}"
+        nil
+      end
+    rescue => e
+      puts "⚠️  Error fetching avatar: #{e.message}"
+      nil
+    end
+  end
+
+  def generate_initials(name)
+    return "?" if name.blank?
+
+    words = name.split
+    if words.length >= 2
+      "#{words.first[0]}#{words.last[0]}".upcase
+    else
+      name[0..1].upcase
+    end
   end
 
   def upload_svg_to_cloudinary(svg_content, public_id)
