@@ -69,9 +69,6 @@
       </div>
     </div>
 
-    <span aria-hidden="true" class="pointer-events-none absolute inset-px rounded-[calc(1.5rem-1px)] opacity-20"
-          style="background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.06) 45%, transparent 60%); animation: sheen 7s linear infinite;"></span>
-
     <%# Live Slack notification overlay %>
     <%= render Incidents::LiveSlackNotificationComponent.new(
       incident_id: incident.id,
