@@ -138,10 +138,10 @@ class EpicAnalyticsImageJob < ApplicationJob
 
         <!-- Header Card -->
         <rect x="60" y="60" width="1160" height="120" fill="#151327" stroke="url(#accentGradient)" stroke-width="2" rx="28"/>
-        <text x="100" y="100" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="48" font-weight="700" dominant-baseline="hanging">
+        <text x="100" y="90" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="48" font-weight="700" dominant-baseline="hanging">
           Incident ##{@incident.number}
         </text>
-        <text x="100" y="150" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="24" font-weight="600" dominant-baseline="hanging">
+        <text x="100" y="140" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="24" font-weight="600" dominant-baseline="hanging">
           #{@incident.status&.upcase || 'RESOLVED'}
         </text>
 
