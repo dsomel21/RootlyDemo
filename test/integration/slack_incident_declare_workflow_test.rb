@@ -72,10 +72,11 @@ class SlackIncidentDeclareHttpWorkflowTest < ActionDispatch::IntegrationTest
     # Hit the endpoint with valid Slack signature
     post "/slack/commands", params: slack_params, headers: slack_headers(slack_params)
 
-    # Should return success response
+    # Should return success response with helpful message
     assert_response :ok
     response_json = JSON.parse(response.body)
-    assert_empty response_json # Empty response means modal was opened successfully
+    assert_equal "ephemeral", response_json["response_type"]
+    assert_equal "📋 Opening incident declaration form...", response_json["text"]
   end
 
   test "modal structure: validates Block Kit JSON format" do

@@ -8,8 +8,11 @@ module Slack
         return Slack::Response.err("Could not build modal.")           unless build_modal(ctx)
         return Slack::Response.err("Slack error opening modal.")        unless tell_slack_to_open_modal(ctx)
 
-        # Return empty response when modal opens successfully (Slack best practice)
-        Slack::Response.ok({})
+        # Return helpful message instead of empty JSON
+        Slack::Response.ok({
+          response_type: "ephemeral",
+          text: "📋 Opening incident declaration form..."
+        })
       end
 
       # Originally, I was thinking this could be used like:
