@@ -41,34 +41,58 @@ class Slack::InteractionsController < Slack::BaseController
 
     # Parse the payload (Slack sends it as form data)
     payload = JSON.parse(params[:payload])
+    interaction_type = payload["type"]
 
-    # Route the interaction to the appropriate handler
-    interaction_router = Slack::InteractionRouter.route(payload["type"], payload)
+    response = case interaction_type
+    when "view_submission"
+      handle_view_submission(payload)
+    when "block_actions"
+      handle_block_actions(payload)
+    else
+      Rails.logger.warn "Unknown interaction type: #{interaction_type}"
+      Slack::Response.ok({})
+    end
 
-    response = case interaction_router[:action]
-    when :create_incident
+    render json: response.json, status: response.status
+  end
+
+  private
+
+  def handle_view_submission(payload)
+    callback_id = payload.dig("view", "callback_id")
+
+    case callback_id
+    when "incident_declare"
       puts "🚀 HANDLING CREATE INCIDENT INTERACTION"
       Slack::Workflows::CreateIncidentInteraction.new(
         organization: current_organization,
         payload: payload
       ).call
-    when :resolve_incident
+    when "incident_resolve"
       puts "TODO: Implement resolve incident workflow"
       Slack::Response.ok({ response_action: "clear" })
-    when :update_user_settings
+    when "user_settings"
       puts "TODO: Implement user settings workflow"
       Slack::Response.ok({ response_action: "clear" })
-    when :resolve_incident_button
+    else
+      Rails.logger.warn "Unknown modal callback_id: #{callback_id}"
+      Slack::Response.ok({})
+    end
+  end
+
+  def handle_block_actions(payload)
+    action_id = payload.dig("actions", 0, "action_id")
+
+    case action_id
+    when "resolve_button"
       puts "TODO: Implement resolve button workflow"
       Slack::Response.ok({})
-    when :update_incident_status
+    when "update_status_select"
       puts "TODO: Implement status update workflow"
       Slack::Response.ok({})
     else
-      Rails.logger.warn "Unknown interaction action: #{interaction_router[:action]}"
+      Rails.logger.warn "Unknown block action: #{action_id}"
       Slack::Response.ok({})
     end
-
-    render json: response.json, status: response.status
   end
 end
