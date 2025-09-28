@@ -62,6 +62,7 @@ module Slack
       end
 
       def find_or_create_slack_user
+        puts "🔄 Finding or creating Slack user for #{slack_user_id}"
         @slack_user = organization.slack_users.find_or_initialize_by(slack_user_id: slack_user_id)
 
         # Always save the user record and mark as saved for testing
