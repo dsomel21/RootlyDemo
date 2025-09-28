@@ -163,6 +163,7 @@ module Slack
         }
       end
 
+      # 📌 TODO: Move this somwhere else; especially since we use it again in the EpicAnalyticsImageJob
       def build_stats_section
         # Add some fun stats if resolution was quick
         if @duration[:total_seconds] < 300 # Less than 5 minutes
