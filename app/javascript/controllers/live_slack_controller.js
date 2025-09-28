@@ -12,8 +12,8 @@ export default class extends Controller {
     this.currentMessage = null
     this.isVisible = true
     this.pollInterval = 8000 // Start with 8s
-    this.maxPollInterval = 30000 // Cap at 30s
-    this.lingerTime = 400000 // 400 seconds visible
+    this.maxPollInterval = 60 * 1000 * 5 // Cap at 5 minutes
+    this.lingerTime = 8000 // 8 seconds visible
     this.lingerTimer = null
     this.isHovered = false
 
@@ -117,8 +117,9 @@ export default class extends Controller {
     this.textTarget.textContent = messageData.text || ''
     this.timeTarget.textContent = this.formatRelativeTime(messageData.sent_at)
 
-    // Make card visible and animate in
-    this.cardTarget.classList.remove('invisible', 'opacity-0')
+    // Make card visible and animate in using BEM classes
+    this.cardTarget.style.visibility = 'visible'
+    this.cardTarget.style.opacity = '1'
     this.cardTarget.classList.add('ls-anim-in')
     
     this.stateValue = 'showing'
@@ -136,9 +137,10 @@ export default class extends Controller {
     this.cardTarget.classList.add('ls-anim-out')
     this.stateValue = 'hiding'
 
-    // Wait for animation to complete, then hide
+    // Wait for animation to complete, then hide using BEM classes
     setTimeout(() => {
-      this.cardTarget.classList.add('invisible', 'opacity-0')
+      this.cardTarget.style.visibility = 'hidden'
+      this.cardTarget.style.opacity = '0'
       this.cardTarget.classList.remove('ls-anim-in', 'ls-anim-pulse', 'ls-anim-out')
       this.stateValue = 'idle'
       this.clearLingerTimer()
