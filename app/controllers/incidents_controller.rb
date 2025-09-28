@@ -76,7 +76,7 @@ class IncidentsController < ApplicationController
     end
 
     begin
-      latest_message = fetch_latest_slack_message(@incident)
+      latest_message = @incident.slack_channel.fetch_latest_message
 
       if latest_message
         render json: {
@@ -184,34 +184,6 @@ class IncidentsController < ApplicationController
     @sort_direction
   end
   helper_method :sort_direction_for
-
-  # Fetches the latest Slack message for an incident
-  def fetch_latest_slack_message(incident)
-    return nil unless incident.slack_channel
-
-    # Fetch recent messages from Slack channel
-    messages = incident.slack_channel.fetch_slack_history.first(10)
-
-    # Filter out bot messages and find the latest human message
-    human_messages = messages.reject { |msg| msg["bot_profile"].present? }
-    latest_message = human_messages.first
-
-    return nil unless latest_message
-
-    # Get user info for the message author
-    user_id = latest_message["user"]
-    slack_user = incident.organization.slack_users.find_by(slack_user_id: user_id)
-
-    # Build the response data
-    {
-      author: slack_user&.display_name || slack_user&.real_name || "Unknown User",
-      avatar_url: slack_user&.avatar_url || "",
-      text: latest_message["text"] || "",
-      permalink: "https://slack.com/archives/#{incident.slack_channel.slack_channel_id}/p#{latest_message['ts'].gsub('.', '')}",
-      ts: latest_message["ts"],
-      sent_at: Time.at(latest_message["ts"].to_f).iso8601
-    }
-  end
 
   # Truncates message text to 250 characters
   def truncate_message(text)

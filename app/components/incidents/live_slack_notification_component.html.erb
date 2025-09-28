@@ -1,9 +1,4 @@
-<%#
-  Live Slack notification overlay for active incidents.
-  Displays the latest Slack message inline in the banner's right negative space.
-  Desktop only, absolutely positioned with inline styles for top/right.
-%>
-
+<%# Live Slack notification overlay – fixed hierarchy/spacing/animation %>
 <div 
   class="hidden md:block pointer-events-auto"
   data-controller="live-slack"
@@ -12,44 +7,46 @@
   aria-live="polite"
   aria-atomic="true"
 >
-  <div 
+  <div
     data-live-slack-target="card"
     class="invisible opacity-0 absolute z-20 select-none
-           rounded-2xl border border-white/10
-           shadow-[0_8px_24px_rgba(0,0,0,0.35)]
-           bg-black/70 backdrop-blur-md
-           will-change-transform will-change-opacity
-           flex items-center gap-3 p-3 max-w-[420px]
+           rounded-2xl border border-white/12
+           bg-black/75 backdrop-blur-md
+           shadow-[0_10px_28px_rgba(0,0,0,0.40)]
+           [background-image:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0)_30%)]
+           will-change-transform will-change-opacity 
+           flex items-start gap-2.5 p-3 max-w-[480px]
            cursor-pointer hover:bg-black/80 transition-colors duration-200"
     style="top: <%= @top_px %>; right: <%= @right_px %>;"
     role="status"
     data-action="click->live-slack#openMessage"
   >
-    <img 
-      data-live-slack-target="avatar" 
-      alt="" 
-      class="h-8 w-8 rounded-full object-cover flex-shrink-0" 
+  <%#  %>
+    <img
+      data-live-slack-target="avatar"
+      alt=""
+      class="h-8 w-8 rounded-full object-cover flex-shrink-0 ring-1 ring-white/10"
     />
 
     <div class="min-w-0 flex-1">
-      <div class="flex items-baseline gap-2">
-        <span 
-          data-live-slack-target="author" 
-          class="font-medium text-sm truncate" 
-          style="color:#EDEDED;"
+      <div class="flex items-baseline justify-between">
+        <span
+          data-live-slack-target="author"
+          class="font-medium text-[13px] truncate"
+          style="color:#E6E6E6;"
         ></span>
-        <span 
-          data-live-slack-target="time" 
-          class="text-xs flex-shrink-0" 
+        <span
+          data-live-slack-target="time"
+          class="text-[12px] ml-3 flex-shrink-0"
           style="color:#8A8A8A;"
         ></span>
       </div>
-      <div 
-        data-live-slack-target="text" 
-        class="text-sm leading-relaxed line-clamp-2 mt-1" 
-        style="color:#CFCFCF;"
+
+      <div
+        data-live-slack-target="text"
+        class="text-[14px] leading-snug line-clamp-2 mt-1.5"
+        style="color:#D4D4D4;"
       ></div>
     </div>
   </div>
 </div>
-

@@ -13,7 +13,7 @@ export default class extends Controller {
     this.isVisible = true
     this.pollInterval = 8000 // Start with 8s
     this.maxPollInterval = 30000 // Cap at 30s
-    this.lingerTime = 4000 // 4 seconds visible
+    this.lingerTime = 400000 // 400 seconds visible
     this.lingerTimer = null
     this.isHovered = false
 
