@@ -1,0 +1,55 @@
+<%#
+  Live Slack notification overlay for active incidents.
+  Displays the latest Slack message inline in the banner's right negative space.
+  Desktop only, absolutely positioned with inline styles for top/right.
+%>
+
+<div 
+  class="hidden md:block pointer-events-auto"
+  data-controller="live-slack"
+  data-live-slack-incident-id-value="<%= @incident_id %>"
+  data-live-slack-state-value="idle"
+  aria-live="polite"
+  aria-atomic="true"
+>
+  <div 
+    data-live-slack-target="card"
+    class="invisible opacity-0 absolute z-20 select-none
+           rounded-2xl border border-white/10
+           shadow-[0_8px_24px_rgba(0,0,0,0.35)]
+           bg-black/70 backdrop-blur-md
+           will-change-transform will-change-opacity
+           flex items-center gap-3 p-3 max-w-[420px]
+           cursor-pointer hover:bg-black/80 transition-colors duration-200"
+    style="top: <%= @top_px %>; right: <%= @right_px %>;"
+    role="status"
+    data-action="click->live-slack#openMessage"
+  >
+    <img 
+      data-live-slack-target="avatar" 
+      alt="" 
+      class="h-8 w-8 rounded-full object-cover flex-shrink-0" 
+    />
+
+    <div class="min-w-0 flex-1">
+      <div class="flex items-baseline gap-2">
+        <span 
+          data-live-slack-target="author" 
+          class="font-medium text-sm truncate" 
+          style="color:#EDEDED;"
+        ></span>
+        <span 
+          data-live-slack-target="time" 
+          class="text-xs flex-shrink-0" 
+          style="color:#8A8A8A;"
+        ></span>
+      </div>
+      <div 
+        data-live-slack-target="text" 
+        class="text-sm leading-relaxed line-clamp-2 mt-1" 
+        style="color:#CFCFCF;"
+      ></div>
+    </div>
+  </div>
+</div>
+

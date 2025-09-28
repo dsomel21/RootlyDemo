@@ -26,7 +26,11 @@ Rails.application.routes.draw do
 
 
   # Incidents management
-  resources :incidents, only: [ :index, :show ]
+  resources :incidents, only: [ :index, :show ] do
+    member do
+      get :latest_message
+    end
+  end
 
   # Slug-based URLs work alongside regular show routes
   get "incidents/:slug", to: "incidents#show"

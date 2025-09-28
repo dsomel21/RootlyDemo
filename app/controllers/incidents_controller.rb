@@ -64,6 +64,38 @@ class IncidentsController < ApplicationController
     end
   end
 
+  # GET /incidents/:id/latest_message
+  # Returns the latest Slack message for the incident as JSON
+  def latest_message
+    @incident = Incident.find(params[:id])
+
+    # Return 404 if incident has no Slack channel
+    unless @incident.slack_channel
+      head :not_found
+      return
+    end
+
+    begin
+      latest_message = fetch_latest_slack_message(@incident)
+
+      if latest_message
+        render json: {
+          author: latest_message[:author],
+          avatar_url: latest_message[:avatar_url],
+          text: truncate_message(latest_message[:text]),
+          permalink: latest_message[:permalink],
+          ts: latest_message[:ts],
+          sent_at: latest_message[:sent_at]
+        }
+      else
+        head :not_found
+      end
+    rescue => e
+      Rails.logger.error "Error fetching latest message for incident #{@incident.id}: #{e.message}"
+      head :internal_server_error
+    end
+  end
+
   private
 
   # Extract and validate sorting parameters from the request
@@ -152,4 +184,39 @@ class IncidentsController < ApplicationController
     @sort_direction
   end
   helper_method :sort_direction_for
+
+  # Fetches the latest Slack message for an incident
+  def fetch_latest_slack_message(incident)
+    return nil unless incident.slack_channel
+
+    # Fetch recent messages from Slack channel
+    messages = incident.slack_channel.fetch_slack_history.first(10)
+
+    # Filter out bot messages and find the latest human message
+    human_messages = messages.reject { |msg| msg["bot_profile"].present? }
+    latest_message = human_messages.first
+
+    return nil unless latest_message
+
+    # Get user info for the message author
+    user_id = latest_message["user"]
+    slack_user = incident.organization.slack_users.find_by(slack_user_id: user_id)
+
+    # Build the response data
+    {
+      author: slack_user&.display_name || slack_user&.real_name || "Unknown User",
+      avatar_url: slack_user&.avatar_url || "",
+      text: latest_message["text"] || "",
+      permalink: "https://slack.com/archives/#{incident.slack_channel.slack_channel_id}/p#{latest_message['ts'].gsub('.', '')}",
+      ts: latest_message["ts"],
+      sent_at: Time.at(latest_message["ts"].to_f).iso8601
+    }
+  end
+
+  # Truncates message text to 250 characters
+  def truncate_message(text)
+    return "" if text.blank?
+
+    text.length > 250 ? "#{text[0..246]}..." : text
+  end
 end
