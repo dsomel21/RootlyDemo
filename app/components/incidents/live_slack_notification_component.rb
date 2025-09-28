@@ -22,4 +22,3 @@ module Incidents
     end
   end
 end
-
