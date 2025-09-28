@@ -147,7 +147,7 @@ class EpicAnalyticsImageJob < ApplicationJob
 
         <!-- Middle Card -->
         <rect x="60" y="204" width="1160" height="200" fill="#151327" stroke="rgba(255,255,255,0.10)" stroke-width="1" rx="28"/>
-        <text x="104" y="248" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="36" font-weight="700" dominant-baseline="hanging" filter="url(#softGlow)" style="font-feature-settings: 'tnum' 1; -webkit-font-feature-settings: 'tnum' 1;">
+        <text x="104" y="230" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="48" font-weight="700" dominant-baseline="hanging" filter="url(#softGlow)" style="font-feature-settings: 'tnum' 1; -webkit-font-feature-settings: 'tnum' 1;">
           #{format_duration(@incident.resolved_duration_seconds)}
         </text>
         <text x="104" y="280" fill="#9A96B5" font-family="Inter, Montserrat, sans-serif" font-size="18" font-weight="500" dominant-baseline="hanging">
