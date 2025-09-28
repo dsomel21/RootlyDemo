@@ -130,6 +130,10 @@ class EpicAnalyticsImageJob < ApplicationJob
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
+      #{'    '}
+          <filter id="whiteLogo">
+            <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
+          </filter>
         </defs>
 
         <!-- Background -->
@@ -169,7 +173,7 @@ class EpicAnalyticsImageJob < ApplicationJob
 
         <!-- Rootly Logo -->
         <image href="https://res.cloudinary.com/dip5mdxwe/image/upload/v1759080454/RootlyLogo.min_putzc4.svg"#{' '}
-               x="1148" y="584" width="120" height="60" opacity="0.7" fill="#FFFFFF"/>
+               x="1100" y="662" width="120" height="60" opacity="1.0" filter="url(#whiteLogo)"/>
 
       </svg>
     SVG
