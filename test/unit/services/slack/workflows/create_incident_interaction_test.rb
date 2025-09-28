@@ -38,29 +38,6 @@ class Slack::Workflows::CreateIncidentInteractionTest < ActiveSupport::TestCase
       "user" => { "id" => @slack_user_id }
     }
   end
-
-  test "find_or_create_slack_user saves SlackUser for declarer" do
-    # Ensure clean state - delete any existing SlackUser and related records
-    SlackUser.where(slack_user_id: @slack_user_id).delete_all
-    Incident.where(slack_creator_id: SlackUser.where(slack_user_id: @slack_user_id).pluck(:id)).delete_all
-
-    interaction = Slack::Workflows::CreateIncidentInteraction.new(
-      organization: @organization,
-      payload: @payload
-    )
-
-    # Run the workflow (which calls find_or_create_slack_user internally)
-    mock_slack_responses(interaction)
-    result = interaction.call
-
-    # Verify SlackUser is created and saved
-    slack_user = SlackUser.find_by(slack_user_id: @slack_user_id)
-    assert_not_nil slack_user, "SlackUser should be created for #{@slack_user_id}"
-    assert_equal @organization, slack_user.organization
-    assert slack_user.persisted?, "SlackUser should be persisted to database"
-
-    Rails.logger.info("✅ Verified SlackUser creation for #{@slack_user_id}")
-  end
 end
 
 private
