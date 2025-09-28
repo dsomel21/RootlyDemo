@@ -12,41 +12,30 @@ export default class extends Controller {
     this.currentMessage = null
     this.isVisible = true
     this.pollInterval = 8000 // Start with 8s
-    this.maxPollInterval = 60 * 1000 * 5 // Cap at 5 minutes
     this.lingerTime = 8000 // 8 seconds visible
     this.initialDelay = 3000 // 3 seconds delay before starting to poll
     this.lingerTimer = null
-    this.isHovered = false
     this.hasStartedPolling = false
 
-    // console.log('LiveSlack: Controller connected, setting up observer...')
-
+    // TODO: Add Page Visibility API support - pause polling when tab is hidden
+    // TODO: Add hover/focus interaction support - pause linger timer on hover
+    
     // Set up intersection observer for in-view detection
     this.observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
           this.isVisible = entry.isIntersecting
-          // console.log(`LiveSlack: Element visibility changed - isVisible: ${this.isVisible}`)
           
           if (this.isVisible) {
             this.scheduleInitialPolling()
           } else {
             this.stopPolling()
-            // console.log('LiveSlack: Stopped polling (element not visible)')
           }
         })
       },
       { threshold: 0.1 }
     )
     this.observer.observe(this.element)
-    // console.log('LiveSlack: Observer set up and observing element')
-
-    // Set up hover listeners for pause/resume
-    this.cardTarget.addEventListener('mouseenter', this.handleMouseEnter.bind(this))
-    this.cardTarget.addEventListener('mouseleave', this.handleMouseLeave.bind(this))
-    this.cardTarget.addEventListener('focus', this.handleMouseEnter.bind(this))
-    this.cardTarget.addEventListener('blur', this.handleMouseLeave.bind(this))
-
     // Schedule initial polling with delay if visible
     if (this.isVisible) {
       this.scheduleInitialPolling()
@@ -56,21 +45,26 @@ export default class extends Controller {
   disconnect() {
     this.stopPolling()
     this.clearLingerTimer()
-    this.observer?.disconnect()
+    this.observer?.disconnect()    
   }
 
   /**
    * Called by the intersection observer when the element becomes visible.
    * Waits 3 seconds before starting to poll to prevent disruptive notifications on page load.
+   * Also handles restarting polling when coming back into view.
    */
   scheduleInitialPolling() {
-    if (this.hasStartedPolling) return
-        
-    setTimeout(() => {
-      if (this.isVisible) {
-        this.startPolling()
-      }
-    }, this.initialDelay)
+    // If we haven't started polling yet, wait for initial delay
+    if (!this.hasStartedPolling) {
+      setTimeout(() => {
+        if (this.isVisible) {
+          this.startPolling(true) // Fetch immediately on first load
+        }
+      }, this.initialDelay)
+    } else {
+      // If we've already started polling before, restart without immediate fetch when coming back into view
+      this.startPolling(false)
+    }
   }
 
   /**
@@ -79,25 +73,23 @@ export default class extends Controller {
    * wait 3s → startPolling() → fetch immediately + set 8s interval → new message arrives → 
    * reset interval → startPolling() called again
    */
-  startPolling() {
+  startPolling(shouldFetchImmediately = false) {
     if (this.pollTimer) return
 
     this.hasStartedPolling = true
-    // console.log(`LiveSlack: Starting polling with ${this.pollInterval}ms interval`)
 
     this.pollTimer = setInterval(() => {
-      // console.log(`LiveSlack: Polling for new messages (next poll in ${this.pollInterval}ms)`)
       this.fetchLatestMessage()
     }, this.pollInterval)
     
-    // Fetch immediately
-    // console.log('LiveSlack: Fetching initial message...')
-    this.fetchLatestMessage()
+    // Only fetch immediately on first load, not when coming back into view
+    if (shouldFetchImmediately) {
+      this.fetchLatestMessage()
+    }
   }
 
   stopPolling() {
     if (this.pollTimer) {
-      // console.log('LiveSlack: Stopping polling timer')
       clearInterval(this.pollTimer)
       this.pollTimer = null
     }
@@ -108,8 +100,6 @@ export default class extends Controller {
       const response = await fetch(`/incidents/${this.incidentIdValue}/latest_message`)
       
       if (!response.ok) {
-        // Silently skip on error - no UI spam
-        console.debug('LiveSlack: Fetch failed with status:', response.status)
         return
       }
 
@@ -122,23 +112,18 @@ export default class extends Controller {
         this.showMessage(data)
         
         // Reset polling interval to 8s on new message
-        // console.log('LiveSlack: Resetting polling interval to 8s due to new message')
         this.pollInterval = 8000
         this.stopPolling()
-        this.startPolling()
-      } else {
-        // console.debug('LiveSlack: No new messages found')
+        this.startPolling(false) // Don't fetch immediately when resetting
       }
     } catch (error) {
       // Silently skip on error - no UI spam
-      console.debug('LiveSlack: Fetch error', error)
     }
   }
 
   showMessage(messageData) {
-    // If we're already showing a message, queue this one
+    // If we're already showing a message, replace it immediately
     if (this.stateValue === 'showing') {
-      // For simplicity, replace current message with new one
       this.hideMessage()
       setTimeout(() => this.displayMessage(messageData), 100)
       return
@@ -172,7 +157,6 @@ export default class extends Controller {
   }
 
   hideMessage() {
-    // console.log('LiveSlack: Hiding notification')
     this.cardTarget.classList.add('ls-anim-out')
     this.stateValue = 'hiding'
 
@@ -183,7 +167,6 @@ export default class extends Controller {
       this.cardTarget.classList.remove('ls-anim-in', 'ls-anim-pulse', 'ls-anim-out')
       this.stateValue = 'idle'
       this.clearLingerTimer()
-      // console.log('LiveSlack: Notification hidden')
     }, 260)
   }
 
@@ -191,9 +174,7 @@ export default class extends Controller {
     this.clearLingerTimer()
     
     this.lingerTimer = setTimeout(() => {
-      if (!this.isHovered) {
-        this.hideMessage()
-      }
+      this.hideMessage()
     }, this.lingerTime)
   }
 
@@ -201,18 +182,6 @@ export default class extends Controller {
     if (this.lingerTimer) {
       clearTimeout(this.lingerTimer)
       this.lingerTimer = null
-    }
-  }
-
-  handleMouseEnter() {
-    this.isHovered = true
-    this.clearLingerTimer()
-  }
-
-  handleMouseLeave() {
-    this.isHovered = false
-    if (this.stateValue === 'showing') {
-      this.startLingerTimer()
     }
   }
 
