@@ -138,8 +138,8 @@ class Slack::InstallController < ApplicationController
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #ffffff;
-            color: #000000;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
             padding: 16px 32px;
             border-radius: 8px;
             text-decoration: none;
@@ -147,25 +147,26 @@ class Slack::InstallController < ApplicationController
             font-size: 16px;
             margin: 32px 0;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: hidden;
             outline: none;
             user-select: none;
             letter-spacing: -0.01em;
+            backdrop-filter: blur(8px);
           }
           .install-button:hover {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.15);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-color: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
           }
           .install-button:active {
             transform: translateY(0);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-            background: #f1f3f4;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.08);
           }
           .install-button:focus {
             outline: 2px solid rgba(139, 92, 246, 0.5);
@@ -250,23 +251,24 @@ class Slack::InstallController < ApplicationController
             justify-content: center;
             width: 48px;
             height: 48px;
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            color: #000000;
+            color: #ffffff;
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
             position: relative;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             letter-spacing: -0.01em;
+            backdrop-filter: blur(8px);
           }
           .step-card:hover .step-number {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
-            background: #f8f9fa;
-            border-color: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
           }
           .step-title {
             color: #ffffff;
