@@ -1,118 +1,164 @@
-# 🚨 Rootly Clone by Dil
+# Rootly Clone Demo (Take Home Assignment - By Dil)
 
-## 🎥 Demo
+[▶️ Watch the demo here](https://www.loom.com/share/419c3c1761f14e64b6a47a1887d96860?sid=bc592556-72f7-463c-8e75-6309992477a4)
 
-[▶️ Watch Demo on Loom](https://www.loom.com/share/419c3c1761f14e64b6a47a1887d96860?sid=bc592556-72f7-463c-8e75-6309992477a4)
+Hi! My name is Dilraj - or Dil for short! I'm a hardcore softare dev... and I also love using,
+studying, building amazing products. This is the Rootly clone I made (as a part
+of the Product Engineering coding assignment).
 
+## How It Works
 
-**Simple incident management through Slack**
+- Team installs the app to their Slack workspac (`/slack/install`)
+- They go to Slack, type the `/rootly declare <title>` command to declare an
+  incident
+- They fill out a modal form to declare the incident (`title`, `description`,
+  and `severity`)
+- The system creates a dedicated incident channel, updates metadata, syncs user
+  profiles, and tracks everything in a web dashboard (`incidents#index`)
+- When the incident is resolved, they use `/rootly resolve` to close it out and
+  get analytics on response time and team participation
 
-RootlyDemo is [Dilraj](https://www.linkedin.com/in/dilraj-singh-468771169/)'s
-attempt at building a minified Rootly! This is a Rails-based incident management
-platform that integrates seamlessly with Slack. Teams can declare, track, and
-resolve incidents without leaving their communication workflow, while
-maintaining a centralized web dashboard for incident oversight.
+## Technical Architecture
 
-## ✨ Key Features
+### General
 
-### Slack-Native Incident Management
+It's a Rails-y monolith and I tried to follow the standard Rails conventions and
+patterns.
 
-- `/rootly declare <title>`: Interactive Block Kit modals with rich validation
-- `/rootly resolve`: Context-aware incident resolution with analytics
-- Automated Channels: Dedicated incident workspaces
-  (`#inc-0001-database-issues`)
-- User Profiles: Automatic Slack profile synchronization
+- Ruby on Rails
+- PostgreSQL
+- Sidekiq + Redis
+- HTML + ERB
+- Hotwire/Turbo
+- Stimulus
+- Tailwind CSS
+- ViewComponent
 
-### Web Dashboard
+### Service Objects
 
-- Incident Listing: Comprehensive overview with Turbo-powered sorting
-- Real-time Sorting: Sort by title, severity, status, date (ASC/DESC)
-- Rich Metadata: Creator info, resolution times, Slack channel links
-- Responsive Design: Mobile-optimized with Tailwind CSS
+Business logic is encapsulated in plain Ruby objects within `app/services/`. I
+did this to keep the controllers thin...
 
-### Multi-Tenant Architecture
+I intionally went with this _Workflow_ design, because... the way I think about
+Rootly's domain is inherently a sequence of coordinated steps and
+side-effects.... When you `/rootly declare <title>` or `/rootly resolve`, it's
+not just one update... it can trigger:
 
-- Organization Isolation: Complete data separation using UUIDs
-- OAuth 2.0 Security: Secure app installation with encrypted token storage
-- Request Verification: HMAC-SHA256 signature validation
-- Sequential Numbering: Thread-safe incident counters per organization
+- DB read/writes
+- Changes in Slack
+- Analytics jobs
+- Calendar updates
+- Ticket transitions
+- Delayed follow-ups
 
-## Documentation
+...there is a big benefit to encapsulating that in a single orchestrator, I keep
+the logic explicit, testable, and domain-driven.
 
-- Controllers: [app/controllers/README.md](app/controllers/README.md)
-- Slack Integration:
-  [app/controllers/slack/README.md](app/controllers/slack/README.md)
+It’s lightweight today—just a plain Ruby object (without retries, durable
+state)—but it gives us a clean contract for when we `declare` or `resolve` an
+incident. That means we can easily layer in events, async fan-out, or
+policy-based branching as Rootly evolves...
+
+Key services:
+
+- `Slack::Workflows::DeclareCommand` - Handles incident declaration flow
+- `Slack::Workflows::ResolveIncidentCommand` - Manages incident resolution
+- `Slack::Client` - Wrapper for Slack API interactions
+
+### Asynchronous Processing
+
+Background jobs handle non-blocking operations using Sidekiq:
+
+- `FetchSlackUserProfileJob` - Syncs user profiles after incident creation
+- `EpicAnalyticsImageJob` - Generates post-resolution analytics visualizations
+- `UpdateSlackChannelMetadataJob` - Updates channel metadata
+
+### Cloudinary Integration
+
+Analytics visualizations are generated as SVG and uploaded to Cloudinary for:
+
+- Dynamic image generation with user avatars
+- Automatic PNG conversion for Slack compatibility
+- CDN delivery for fast image loading
+
+### Real-time Updates
+
+Live Slack notifications use polling with Intersection Observer API:
+
+- 8-second polling intervals for new messages (I could've optimized this to be
+  more efficient, but I was worried it would mess up the demo lol)
+- Visibility-based polling (stops when element not in view). (Room for
+  improvement, see
+  [here](https://github.com/dsomel21/RootlyDemo/blob/bd3158a5e474c7a93a172d3630255d5140470102/app/javascript/controllers/live_slack_controller.js#L20-L21))
+
+### Controller Architecture
+
+Controllers follow Rails conventions with Slack-specific namespacing. All Slack
+endpoints live in the `Slack::` namespace with thin controllers that delegate
+business logic to service objects. Shared authentication and organization lookup
+is handled by `Slack::BaseController`.
 
 ## Setup
 
+### Prerequisites
+
+1. Slack API Keys
+2. Cloudinary API Keys
+3. Setup your environment variables. I run
+   `EDITOR="nano" bin/rails credentials:edit` and then update them here:
+
+```
+secret_key_base: abc123
+
+active_record_encryption:
+  primary_key: abc123
+  key_derivation_salt: abc123
+
+slack:
+  client_id: abc123
+  client_secret: abc123
+  signing_secret: abc123
+  redirect_url: abc123 # This needs to be a valid HTTPS url. I used `localtunnel` for this
+
+cloudinary:
+  cloud_name: abc123
+  api_key: abc123
+  api_secret: abc123
+  url: abc123
+```
+
 1. Install dependencies: `bundle install`
 2. Setup database: `rails db:setup`
-3. Configure Slack credentials: `rails credentials:edit`
-4. Start server: `rails server`
-
-## Development
-
-- Ruby version: Check `.ruby-version`
-- Database: PostgreSQL
-- External tunneling: Use localtunnel for Slack webhooks
+3. Start server: `rails server`
+4. Start Sidekiq: `sidekiq` or `bundle exec sidekiq` (in a separate terminal)
 
 ### Code Quality
 
-Run the linter to check code style:
-
 ```bash
 bundle exec rubocop
-```
-
-Auto-fix most issues:
-
-```bash
 bundle exec rubocop --autocorrect
 ```
 
-## Sidekiq
-
-We use Sidekiq for background jobs to keep the Slack interactions snappy. Here's
-what runs in the background:
-
-- `FetchSlackUserProfileJob`: Grabs user avatars, names, emails after incident
-  creation
-- `EpicAnalyticsImageJob`: Builds the post-resolution analytics visualization
-
-To run Sidekiq locally:
+### Background Jobs
 
 ```bash
 bundle exec sidekiq
 ```
 
-Debug/Monitor:
+Monitor jobs at `/sidekiq` endpoint.
 
-- Dashboard: Visit `/sidekiq` in your browser (shows queues, jobs, failures)
-- Logs: Sidekiq logs appear in your Rails console
-- Failed Jobs: Check the "Dead" tab in dashboard to retry failed jobs
+## Testing
 
-## Tests
-
-Philosophy: Test the whole damn workflow, not tiny pieces. We test real HTTP
-requests → controllers → services → database changes.
-
-Run all tests:
+Integration tests cover complete workflows from HTTP requests through
+controllers, services, and database changes.
 
 ```bash
 rails test
-```
-
-Run specific test:
-
-```bash
 rails test test/integration/slack_incident_declare_workflow_test.rb
 ```
 
-Run single test method:
+## Other Documentation
 
-```bash
-rails test test/integration/slack_incident_declare_workflow_test.rb -n test_successful_declare_command
-```
+- Controllers: [app/controllers/README.md](app/controllers/README.md)
 
-Pro tip: Tests automatically run in CI/CD on every push. Green build = good to
-deploy.
+I also tried to add some documentation to the codebase, around complex parts...
