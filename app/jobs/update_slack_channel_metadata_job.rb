@@ -23,17 +23,9 @@ class UpdateSlackChannelMetadataJob < ApplicationJob
       client = Slack::Client.new(incident.organization)
       channel_id = incident.slack_channel.slack_channel_id
 
-      # Update channel topic
       update_channel_topic(client, channel_id, incident)
-
-      # Pin incident link
       pin_incident_link(client, channel_id, incident)
-
-      # TODO: Update channel description (enhance with AI later
-      # - Could summarize incident details automatically
-      # - Could highlight key stakeholder info
-      # - Could reference related systems/services
-      # update_channel_description(client, channel_id, incident)
+      update_channel_description(client, channel_id, incident)
 
       Rails.logger.info "✅ Updated Slack channel metadata for incident ##{incident.number}"
 
@@ -86,7 +78,9 @@ class UpdateSlackChannelMetadataJob < ApplicationJob
     Rails.logger.warn "Failed to pin incident link: #{e.message}"
   end
 
-  # Build channel topic with emoji and status
+
+  # @example
+  #   "🔴 SEV2 INVESTIGATING"
   def build_channel_topic(incident)
     severity_emoji = severity_to_emoji(incident.severity)
     status_text = incident.status.to_s.upcase
@@ -106,17 +100,19 @@ class UpdateSlackChannelMetadataJob < ApplicationJob
     end
   end
 
-  # TODO: Future channel description (could be enhanced with AI)
   def update_channel_description(client, channel_id, incident)
-    description = "🚨 Incident ##{incident.number}: #{incident.title}"
+    # Only update if incident has a valid description
+    return unless incident.description.present?
 
-    if incident.description.present?
-      description += "\n\n#{incident.description}"
-    end
+    description = incident.description.length > 250 ? incident.description[0, 247] + "..." : incident.description
 
     client.conversations_set_purpose({
       channel: channel_id,
       purpose: description
     })
+
+    Rails.logger.info "📝 Updated channel description for incident ##{incident.number}"
+  rescue => e
+    Rails.logger.warn "Failed to update channel description: #{e.message}"
   end
 end
