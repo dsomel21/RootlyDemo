@@ -1,9 +1,8 @@
-# Rootly Clone Demo (Take Home Assignment)
+# Rootly Clone Demo (Take Home Assignment - By Dil)
 
-Watch the demo
-[here](https://www.loom.com/share/419c3c1761f14e64b6a47a1887d96860?sid=68ba0baf-dbbc-4e4c-9b63-72613a1adcd5)!
+[▶️ Watch the demo here](https://www.loom.com/share/419c3c1761f14e64b6a47a1887d96860?sid=bc592556-72f7-463c-8e75-6309992477a4)
 
-Hi! My name is Dilraj! I'm a hardcore softare dev... and I also love using,
+Hi! My name is Dilraj - or Dil for short! I'm a hardcore softare dev... and I also love using,
 studying, building amazing products. This is the Rootly clone I made (as a part
 of the Product Engineering coding assignment).
 
