@@ -62,7 +62,7 @@ class Slack::InstallController < ApplicationController
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {#{' '}
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #000000 100%);
+            background: linear-gradient(135deg, #1a0b2e 0%, #2d1b69 30%, #1e1b4b 70%, #0f172a 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -82,12 +82,12 @@ class Slack::InstallController < ApplicationController
             pointer-events: none;
           }
           .container {#{' '}
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
-            backdrop-filter: blur(12px);
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(26, 11, 46, 0.9) 50%, rgba(15, 23, 42, 0.85) 100%);
+            backdrop-filter: blur(14px);
             border: 1px solid rgba(139, 92, 246, 0.3);
             padding: 48px;#{' '}
             border-radius: 24px;#{' '}
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(139, 92, 246, 0.15);
             text-align: center;
             max-width: 1200px;
             width: 100%;
@@ -115,13 +115,13 @@ class Slack::InstallController < ApplicationController
             font-weight: 400;
           }
           .org-info {#{' '}
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
-            border: 1px solid rgba(139, 92, 246, 0.2);
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(26, 11, 46, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.25);
             padding: 24px;#{' '}
             border-radius: 16px;#{' '}
             margin: 32px 0;#{' '}
             border-left: 4px solid #8b5cf6;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
           }
           .org-name {
             font-weight: 600;
@@ -138,75 +138,41 @@ class Slack::InstallController < ApplicationController
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: white;
-            padding: 20px 40px;
-            border-radius: 12px;
+            background: #ffffff;
+            color: #000000;
+            padding: 16px 32px;
+            border-radius: 8px;
             text-decoration: none;
-            font-weight: 600;
-            font-size: 18px;
+            font-weight: 500;
+            font-size: 16px;
             margin: 32px 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             cursor: pointer;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
             position: relative;
             overflow: hidden;
             outline: none;
             user-select: none;
-            animation: pulse-glow 3s ease-in-out infinite;
-          }
-          .install-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.6s ease;
-          }
-          .install-button::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            letter-spacing: -0.01em;
           }
           .install-button:hover {
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
-            animation: none;
-          }
-          .install-button:hover::before {
-            left: 100%;
-          }
-          .install-button:hover::after {
-            opacity: 1;
+            background: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-color: rgba(0, 0, 0, 0.15);
           }
           .install-button:active {
-            transform: translateY(-1px) scale(0.98);
-            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.8);
-            background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
-            transition: all 0.1s ease;
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            background: #f1f3f4;
           }
           .install-button:focus {
             outline: 2px solid rgba(139, 92, 246, 0.5);
             outline-offset: 2px;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4), 0 0 0 4px rgba(139, 92, 246, 0.2);
           }
           .install-button:focus:not(:focus-visible) {
             outline: none;
-          }
-          @keyframes pulse-glow {
-            0%, 100% {
-              box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-            }
-            50% {
-              box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4), 0 0 20px rgba(139, 92, 246, 0.3);
-            }
           }
           .slack-logo {
             width: 28px;
@@ -244,8 +210,8 @@ class Slack::InstallController < ApplicationController
             }
           }
           .step-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
-            border: 1px solid rgba(139, 92, 246, 0.3);
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(26, 11, 46, 0.7) 50%, rgba(15, 23, 42, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.25);
             border-radius: 20px;
             padding: 28px 20px;
             backdrop-filter: blur(12px);
@@ -253,10 +219,11 @@ class Slack::InstallController < ApplicationController
             position: relative;
             overflow: hidden;
             text-align: center;
-            min-height: 200px;
+            height: 280px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
+            align-items: center;
           }
           .step-card::before {
             content: '';
@@ -271,8 +238,8 @@ class Slack::InstallController < ApplicationController
           }
           .step-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(139, 92, 246, 0.5);
-            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.1);
           }
           .step-card:hover::before {
             opacity: 1;
@@ -281,59 +248,25 @@ class Slack::InstallController < ApplicationController
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
-            border-radius: 16px;
-            color: white;
-            font-size: 20px;
-            font-weight: 800;
+            width: 48px;
+            height: 48px;
+            background: #ffffff;
+            border-radius: 8px;
+            color: #000000;
+            font-size: 16px;
+            font-weight: 600;
             margin-bottom: 20px;
-            box-shadow:#{' '}
-              0 8px 25px rgba(139, 92, 246, 0.4),
-              0 0 0 1px rgba(255, 255, 255, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
             position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid transparent;
-            background-clip: padding-box;
-          }
-          .step-number::before {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed, #6d28d9, #5b21b6);
-            border-radius: 18px;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            animation: gradient-rotate 3s linear infinite;
-          }
-          .step-number::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-            border-radius: 14px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            letter-spacing: -0.01em;
           }
           .step-card:hover .step-number {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow:#{' '}
-              0 12px 35px rgba(139, 92, 246, 0.6),
-              0 0 0 1px rgba(255, 255, 255, 0.2),
-              inset 0 1px 0 rgba(255, 255, 255, 0.3);
-          }
-          .step-card:hover .step-number::before {
-            opacity: 1;
-          }
-          .step-card:hover .step-number::after {
-            opacity: 1;
-          }
-          @keyframes gradient-rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: #f8f9fa;
+            border-color: rgba(0, 0, 0, 0.15);
           }
           .step-title {
             color: #ffffff;
@@ -351,15 +284,15 @@ class Slack::InstallController < ApplicationController
           .debug-info {
             margin-top: 40px;
             padding: 20px;
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
-            border: 1px solid rgba(139, 92, 246, 0.3);
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(26, 11, 46, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
             color: #10b981;
-            border-radius: 12px;
-            font-family: 'Monaco', 'Menlo', 'SF Mono', monospace;
+            border-radius: 8px;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
             font-size: 13px;
             text-align: left;
             overflow-x: auto;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
           }
           .debug-info strong {
             color: #8b5cf6;
