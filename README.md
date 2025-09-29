@@ -1,4 +1,9 @@
-# 🚨 Rootly v1.0
+# 🚨 Rootly Clone by Dil
+
+## 🎥 Demo
+
+[![Watch the demo](https://cdn.loom.com/sessions/thumbnails/419c3c1761f14e64b6a47a1887d96860-00001.gif)](https://www.loom.com/share/419c3c1761f14e64b6a47a1887d96860?sid=bc592556-72f7-463c-8e75-6309992477a4)
+
 
 **Simple incident management through Slack**
 
