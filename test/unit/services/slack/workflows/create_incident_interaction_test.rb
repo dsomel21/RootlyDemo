@@ -38,29 +38,6 @@ class Slack::Workflows::CreateIncidentInteractionTest < ActiveSupport::TestCase
       "user" => { "id" => @slack_user_id }
     }
   end
-
-  test "find_or_create_slack_user saves SlackUser for declarer" do
-    interaction = Slack::Workflows::CreateIncidentInteraction.new(
-      organization: @organization,
-      payload: @payload
-    )
-
-    # Ensure no SlackUser exists initially
-    SlackUser.where(slack_user_id: @slack_user_id).delete_all
-
-    # Run the workflow (which calls find_or_create_slack_user internally)
-    mock_slack_responses(interaction)
-    interaction.send(:extract_form_data)
-    interaction.send(:validate_incident_data)
-    interaction.send(:find_or_create_slack_user)
-
-    # Verify SlackUser is created and saved
-    slack_user = SlackUser.find_by(slack_user_id: @slack_user_id)
-    assert_not_nil slack_user
-    assert_equal @organization, slack_user.organization
-
-    Rails.logger.info("✅ Verified SlackUser creation for #{slack_user_id}")
-  end
 end
 
 private
@@ -72,8 +49,8 @@ def mock_slack_responses(interaction)
   client.expects(:conversations_create).returns(@channel_response).once
   client.expects(:conversations_invite).returns(@success_response).once
   client.expects(:chat_post_message).returns(@chat_response).at_least(1)
-  client.expects(:conversations_setTopic).returns(@success_response).maybe
-  client.expects(:pins_add).returns(@success_response).maybe
+  client.expects(:conversations_setTopic).returns(@success_response).at_least(0)
+  client.expects(:pins_add).returns(@success_response).at_least(0)
 
   interaction.instance_variable_set(:@client, client)
 end

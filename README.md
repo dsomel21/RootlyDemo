@@ -72,7 +72,6 @@ what runs in the background:
 
 - `FetchSlackUserProfileJob`: Grabs user avatars, names, emails after incident
   creation
-- `PostUserProfileMessageJob`: Posts rich profile cards to incident channels
 - `EpicAnalyticsImageJob`: Builds the post-resolution analytics visualization
 
 To run Sidekiq locally:

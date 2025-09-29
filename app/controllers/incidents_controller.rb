@@ -64,6 +64,38 @@ class IncidentsController < ApplicationController
     end
   end
 
+  # GET /incidents/:id/latest_message
+  # Returns the latest Slack message for the incident as JSON
+  def latest_message
+    @incident = Incident.find(params[:id])
+
+    # Return 404 if incident has no Slack channel
+    unless @incident.slack_channel
+      head :not_found
+      return
+    end
+
+    begin
+      latest_message = @incident.slack_channel.fetch_latest_message
+
+      if latest_message
+        render json: {
+          author: latest_message[:author],
+          avatar_url: latest_message[:avatar_url],
+          text: truncate_message(latest_message[:text]),
+          permalink: latest_message[:permalink],
+          ts: latest_message[:ts],
+          sent_at: latest_message[:sent_at]
+        }
+      else
+        head :not_found
+      end
+    rescue => e
+      Rails.logger.error "Error fetching latest message for incident #{@incident.id}: #{e.message}"
+      head :internal_server_error
+    end
+  end
+
   private
 
   # Extract and validate sorting parameters from the request
@@ -152,4 +184,11 @@ class IncidentsController < ApplicationController
     @sort_direction
   end
   helper_method :sort_direction_for
+
+  # Truncates message text to 250 characters
+  def truncate_message(text)
+    return "" if text.blank?
+
+    text.length > 250 ? "#{text[0..246]}..." : text
+  end
 end

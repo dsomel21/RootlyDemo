@@ -3,6 +3,21 @@
   This is meant to be an urgent message!
 %>
 
+<style>
+  @keyframes pillGlow {
+    0%, 100% { 
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4), 0 0 24px rgba(239, 68, 68, 0.2);
+    }
+    50% { 
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.6), 0 0 36px rgba(239, 68, 68, 0.3);
+    }
+  }
+  
+  .pill-glow {
+    animation: pillGlow 3s ease-in-out infinite;
+  }
+</style>
+
 <div class="w-full max-w-7xl mx-auto px-4 py-8">
   <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-950 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset]">
     <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-1 w-3/4 bg-gradient-to-r from-transparent via-red-500 to-transparent rounded-full opacity-0" 
@@ -13,7 +28,7 @@
     <div class="relative inline-flex items-center rounded-full px-4 py-2 select-none">
       <span class="absolute -inset-4 rounded-full opacity-90 blur-2xl pointer-events-none"
             style="background: radial-gradient(60% 60% at 30% 50%, rgba(239,68,68,0.58), transparent 60%); box-shadow: 0 0 40px rgba(239,68,68,.55), 0 0 80px rgba(239,68,68,.35);"></span>
-      <span class="relative inline-flex items-center rounded-full border border-red-500/40 bg-[rgba(239,68,68,0.10)] px-5 py-1.5 text-sm font-semibold tracking-wide text-red-200">
+      <span class="relative inline-flex items-center rounded-full border border-red-500/40 bg-[rgba(239,68,68,0.10)] px-5 py-1.5 text-sm font-semibold tracking-wide text-red-200 pill-glow">
         <span class="relative mr-2 inline-flex h-2.5 w-2.5 items-center justify-center">
           <span class="absolute h-2.5 w-2.5 rounded-full bg-red-500"></span>
           <span class="absolute h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse"></span>
@@ -69,7 +84,11 @@
       </div>
     </div>
 
-    <span aria-hidden="true" class="pointer-events-none absolute inset-px rounded-[calc(1.5rem-1px)] opacity-20"
-          style="background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.06) 45%, transparent 60%); animation: sheen 7s linear infinite;"></span>
+    <%# Live Slack notification overlay %>
+    <%= render Incidents::LiveSlackNotificationComponent.new(
+      incident_id: incident.id,
+      top_px: "16px",
+      right_px: "20px"
+    ) %>
   </div>
 </div>

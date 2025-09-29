@@ -38,7 +38,7 @@ module BlockKits
                 action_id: "description_input",
                 multiline: true
               },
-              label: { type: "plain_text", text: "Description (optional)" }
+              label: { type: "plain_text", text: "Description" }
             },
             {
               type: "input",
@@ -54,7 +54,7 @@ module BlockKits
                   { text: { type: "plain_text", text: "SEV2 - Medium" },   value: "sev2" }
                 ]
               },
-              label: { type: "plain_text", text: "Severity (optional)" }
+              label: { type: "plain_text", text: "Severity" }
             }
           ]
         }

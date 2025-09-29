@@ -1,0 +1,12 @@
+# ERB Lint configuration
+# This file configures erb-lint to properly handle Rails ERB templates
+
+# Ignore yield statements which are valid in Rails layouts
+ignore:
+  - "Invalid yield"
+
+# Set the Rails environment for proper ERB parsing
+rails_env: test
+
+# Enable Rails-specific ERB parsing
+rails: true

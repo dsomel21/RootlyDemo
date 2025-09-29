@@ -62,107 +62,242 @@ class Slack::InstallController < ApplicationController
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {#{' '}
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a0b2e 0%, #2d1b69 30%, #1e1b4b 70%, #0f172a 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            margin: 0;
+          }
+          body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, rgba(139, 92, 246, 0.3) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(139, 92, 246, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.1;
+            pointer-events: none;
           }
           .container {#{' '}
-            background: white;#{' '}
-            padding: 40px;#{' '}
-            border-radius: 16px;#{' '}
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.9) 0%, rgba(26, 11, 46, 0.9) 50%, rgba(15, 23, 42, 0.85) 100%);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 48px;#{' '}
+            border-radius: 24px;#{' '}
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(139, 92, 246, 0.15);
             text-align: center;
-            max-width: 500px;
+            max-width: 1200px;
             width: 100%;
+            position: relative;
+            z-index: 1;
+            margin: 0 auto;
           }
           .logo {#{' '}
-            font-size: 48px;#{' '}
-            margin-bottom: 16px;#{' '}
+            font-size: 64px;#{' '}
+            margin-bottom: 24px;#{' '}
+            filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5));
           }
           h1 {#{' '}
-            color: #1a1a1a;#{' '}
-            font-size: 28px;#{' '}
-            margin-bottom: 8px;#{' '}
+            color: #ffffff;#{' '}
+            font-size: 32px;#{' '}
+            margin-bottom: 12px;#{' '}
             font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
           }
           .subtitle {#{' '}
-            color: #666;#{' '}
-            font-size: 16px;#{' '}
-            margin-bottom: 32px;#{' '}
-            line-height: 1.5;
+            color: #c4b5fd;#{' '}
+            font-size: 18px;#{' '}
+            margin-bottom: 40px;#{' '}
+            line-height: 1.6;
+            font-weight: 400;
           }
           .org-info {#{' '}
-            background: #f8f9fa;#{' '}
-            padding: 20px;#{' '}
-            border-radius: 12px;#{' '}
-            margin: 24px 0;#{' '}
-            border-left: 4px solid #4285f4;
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(26, 11, 46, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            padding: 24px;#{' '}
+            border-radius: 16px;#{' '}
+            margin: 32px 0;#{' '}
+            border-left: 4px solid #8b5cf6;
+            backdrop-filter: blur(10px);
           }
           .org-name {
             font-weight: 600;
-            color: #1a1a1a;
-            font-size: 18px;
+            color: #ffffff;
+            font-size: 20px;
+            margin-bottom: 8px;
           }
           .org-slug {
-            color: #666;
-            font-size: 14px;
-            margin-top: 4px;
+            color: #a78bfa;
+            font-size: 16px;
+            font-weight: 400;
           }
           .install-button {
-            display: inline-block;
-            background: #4A154B;
-            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
             padding: 16px 32px;
             border-radius: 8px;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
             font-size: 16px;
-            margin: 24px 0;
-            transition: all 0.2s ease;
-            border: none;
+            margin: 32px 0;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            outline: none;
+            user-select: none;
+            letter-spacing: -0.01em;
+            backdrop-filter: blur(8px);
           }
           .install-button:hover {
-            background: #611f69;
+            background: rgba(255, 255, 255, 0.15);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(74, 21, 75, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
+          }
+          .install-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+          }
+          .install-button:focus {
+            outline: 2px solid rgba(139, 92, 246, 0.5);
+            outline-offset: 2px;
+          }
+          .install-button:focus:not(:focus-visible) {
+            outline: none;
           }
           .slack-logo {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
+            width: 28px;
+            height: 28px;
+            margin-right: 12px;
             vertical-align: middle;
           }
           .steps {
-            text-align: left;
-            margin: 32px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
+            margin: 48px 0;
+            text-align: center;
           }
           .steps h3 {
-            color: #1a1a1a;
-            margin-bottom: 16px;
-            font-size: 16px;
+            color: #ffffff;
+            margin-bottom: 40px;
+            font-size: 24px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
           }
-          .step {
-            margin: 8px 0;
-            color: #666;
+          .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 32px;
+          }
+          @media (max-width: 1024px) {
+            .steps-grid {
+              grid-template-columns: repeat(2, 1fr);
+              gap: 24px;
+            }
+          }
+          @media (max-width: 640px) {
+            .steps-grid {
+              grid-template-columns: 1fr;
+              gap: 20px;
+            }
+          }
+          .step-card {
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(26, 11, 46, 0.7) 50%, rgba(15, 23, 42, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 20px;
+            padding: 28px 20px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+          }
+          .step-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+          .step-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.1);
+          }
+          .step-card:hover::before {
+            opacity: 1;
+          }
+          .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            letter-spacing: -0.01em;
+            backdrop-filter: blur(8px);
+          }
+          .step-card:hover .step-number {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+          }
+          .step-title {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.4;
+          }
+          .step-description {
+            color: #c4b5fd;
             font-size: 14px;
+            line-height: 1.5;
+            font-weight: 400;
           }
           .debug-info {
-            margin-top: 32px;
-            padding: 16px;
-            background: #000;
-            color: #0f0;
+            margin-top: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(26, 11, 46, 0.6) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            color: #10b981;
             border-radius: 8px;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 12px;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
             text-align: left;
             overflow-x: auto;
+            backdrop-filter: blur(10px);
+          }
+          .debug-info strong {
+            color: #8b5cf6;
           }
         </style>
       </head>
@@ -181,15 +316,33 @@ class Slack::InstallController < ApplicationController
             <svg class="slack-logo" viewBox="0 0 24 24" fill="currentColor">
               <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
             </svg>
-            Click to Install Rootly
+            Install Rootly for Slack
           </a>
 
           <div class="steps">
             <h3>What happens next:</h3>
-            <div class="step">1️⃣ You'll be redirected to Slack</div>
-            <div class="step">2️⃣ Slack will ask "Rootly is requesting permission..."</div>
-            <div class="step">3️⃣ Click "Allow" to authorize the app</div>
-            <div class="step">4️⃣ You'll be redirected back with success confirmation</div>
+            <div class="steps-grid">
+              <div class="step-card">
+                <div class="step-number">1</div>
+                <div class="step-title">Redirect to Slack</div>
+                <div class="step-description">You'll be taken to Slack's authorization page where you can review the permissions</div>
+              </div>
+              <div class="step-card">
+                <div class="step-number">2</div>
+                <div class="step-title">Review Permissions</div>
+                <div class="step-description">Slack will show you what Rootly needs access to in your workspace</div>
+              </div>
+              <div class="step-card">
+                <div class="step-number">3</div>
+                <div class="step-title">Authorize Installation</div>
+                <div class="step-description">Click "Allow" to grant Rootly access to your Slack workspace</div>
+              </div>
+              <div class="step-card">
+                <div class="step-number">4</div>
+                <div class="step-title">Success!</div>
+                <div class="step-description">You'll be redirected back with a confirmation that Rootly is now installed</div>
+              </div>
+            </div>
           </div>
 
           <div class="debug-info">

@@ -19,7 +19,6 @@ module Slack
           invite_creator_to_channel
           post_welcome_message_to_channel
         end
-        enqueue_job_for_sending_image_of_incident_commander_to_slack_channel
         enqueue_channel_metadata_update
         build_success_response
       rescue => e
@@ -62,6 +61,7 @@ module Slack
       end
 
       def find_or_create_slack_user
+        puts "🔄 Finding or creating Slack user for #{slack_user_id}"
         @slack_user = organization.slack_users.find_or_initialize_by(slack_user_id: slack_user_id)
 
         # Always save the user record and mark as saved for testing
@@ -166,12 +166,6 @@ module Slack
         message = build_welcome_message
         client.chat_post_message(message)
         Rails.logger.info "Posted welcome message to incident channel"
-      end
-
-      # Enqueue job to post user profile message after profile data is fetched
-      def enqueue_job_for_sending_image_of_incident_commander_to_slack_channel
-        Rails.logger.info "📸 Enqueuing profile message job for incident ##{incident.number}"
-        PostUserProfileMessageJob.perform_later(incident.id, slack_user_id)
       end
 
       # Enqueue job to update Slack channel metadata (topic, pins, etc.)

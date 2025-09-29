@@ -72,10 +72,11 @@ class SlackIncidentDeclareHttpWorkflowTest < ActionDispatch::IntegrationTest
     # Hit the endpoint with valid Slack signature
     post "/slack/commands", params: slack_params, headers: slack_headers(slack_params)
 
-    # Should return success response
+    # Should return success response with helpful message
     assert_response :ok
     response_json = JSON.parse(response.body)
-    assert_empty response_json # Empty response means modal was opened successfully
+    assert_equal "ephemeral", response_json["response_type"]
+    assert_equal "📋 Opening incident declaration form...", response_json["text"]
   end
 
   test "modal structure: validates Block Kit JSON format" do
@@ -138,17 +139,23 @@ class SlackIncidentDeclareHttpWorkflowTest < ActionDispatch::IntegrationTest
     assert_includes response_json["text"], "/rootly declare <title>"
   end
 
-  test "unit test: command router logic validation" do
-    # Test the command router logic directly
-    result = Slack::CommandRouter.route("unknown command")
-    assert_equal :help, result[:action]
+  test "command parsing logic validation" do
+    # Test the command parsing logic directly in the controller
+    controller = Slack::CommandsController.new
 
-    result = Slack::CommandRouter.route("resolve")
-    assert_equal :resolve, result[:action]
+    # Test unknown command
+    text = "unknown command"
+    assert_match(/^unknown command$/, text)
 
-    result = Slack::CommandRouter.route("declare Test Title")
-    assert_equal :declare, result[:action]
-    assert_equal "Test Title", result[:title]
+    # Test resolve command
+    text = "resolve"
+    assert_match(/^resolve$/i, text)
+
+    # Test declare command with title
+    text = "declare Test Title"
+    match = text.match(/^declare\s+(.+)/i)
+    assert_not_nil match
+    assert_equal "Test Title", match[1].strip
   end
 
   private

@@ -76,58 +76,133 @@ class EpicAnalyticsImageJob < ApplicationJob
     <<~SVG
       <svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#0f0f23;stop-opacity:1" />
-            <stop offset="50%" style="stop-color:#1a1a2e;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+          <!-- Color Palette -->
+          <style>
+            :root {
+              --bg-0: #0D0B1A;
+              --bg-1: #151327;
+              --bg-2: #1B1832;
+              --br-primary: #7B2CBF;
+              --br-muted: rgba(255,255,255,0.12);
+              --br-glow: rgba(123,44,191,0.35);
+              --text-strong: #FFFFFF;
+              --text: #E7E3F4;
+              --text-muted: #C7C2DD;
+              --text-dim: #9A96B5;
+              --accent: #7B2CBF;
+              --accent-2: #A461FF;
+              --sev0: #FF5468;
+              --sev1: #FFB02E;
+              --sev2: #FFD166;
+              --success: #25D0A6;
+            }
+          </style>
+      #{'    '}
+          <!-- Gradients -->
+          <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#0D0B1A;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#151327;stop-opacity:1" />
           </linearGradient>
+      #{'    '}
+          <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#7B2CBF;stop-opacity:0.35" />
+            <stop offset="100%" style="stop-color:#A461FF;stop-opacity:0.35" />
+          </linearGradient>
+      #{'    '}
+          <linearGradient id="statusGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#FFD166;stop-opacity:0.4" />
+            <stop offset="100%" style="stop-color:#FFB02E;stop-opacity:0.4" />
+          </linearGradient>
+      #{'    '}
+          <!-- Filters -->
           <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
             <feMerge>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
+      #{'    '}
+          <filter id="softGlow">
+            <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+      #{'    '}
+          <filter id="whiteLogo">
+            <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
+          </filter>
         </defs>
 
-        <rect width="1280" height="720" fill="url(#grad1)"/>
-        #{generate_subtle_grid}
+        <!-- Background -->
+        <rect width="1280" height="720" fill="url(#bgGradient)" rx="28"/>
+        #{generate_micro_noise}
 
-        <text x="80" y="150" fill="#00ff88" font-family="Impact, Arial Black, sans-serif" font-size="80" font-weight="900" filter="url(#glow)">
-          ##{@incident.number} INCIDENT RESOLVED! 🚨
+        <!-- Header Card -->
+        <rect x="60" y="60" width="1160" height="120" fill="#151327" stroke="url(#accentGradient)" stroke-width="2" rx="28"/>
+        <text x="100" y="90" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="48" font-weight="700" dominant-baseline="hanging">
+          Incident ##{@incident.number}
+        </text>
+        <text x="100" y="140" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="24" font-weight="600" dominant-baseline="hanging">
+          #{@incident.status&.upcase || 'RESOLVED'}
         </text>
 
-        <text x="80" y="220" fill="#ffffff" font-family="Arial Black, sans-serif" font-size="36" font-weight="900">
-          #{@incident.title.truncate(80).upcase}
+        <!-- Middle Card -->
+        <rect x="60" y="204" width="1160" height="200" fill="#151327" stroke="rgba(255,255,255,0.10)" stroke-width="1" rx="28"/>
+        <text x="104" y="230" fill="#7B2CBF" font-family="Inter, Montserrat, sans-serif" font-size="48" font-weight="700" dominant-baseline="hanging" filter="url(#softGlow)" style="font-feature-settings: 'tnum' 1; -webkit-font-feature-settings: 'tnum' 1;">
+          #{format_duration(@incident.resolved_duration_seconds)}
         </text>
-
-        <text x="80" y="320" fill="#ffd700" font-family="Arial Black, sans-serif" font-size="64" font-weight="bold">
-          ⏱️ #{format_duration(@incident.resolved_duration_seconds)}
-        </text>
-        <text x="1200" y="320" text-anchor="end" fill="#ffaa00" font-family="Arial Black, sans-serif" font-size="64" font-weight="bold" opacity="0.5">
+        <text x="104" y="280" fill="#9A96B5" font-family="Inter, Montserrat, sans-serif" font-size="18" font-weight="500" dominant-baseline="hanging">
           #{categorize_resolution_speed_for_display(@incident.resolved_duration_seconds)}
         </text>
+        <text x="104" y="320" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="24" font-weight="600" dominant-baseline="hanging">
+          #{@incident.title.truncate(60)}
+        </text>
+        <text x="104" y="350" fill="#C7C2DD" font-family="Inter, Montserrat, sans-serif" font-size="16" font-weight="400" dominant-baseline="hanging">
+          #{analytics[:total_messages]} messages • #{analytics[:participants].size} participants
+        </text>
 
+        <!-- Participants Card -->
+        <rect x="60" y="428" width="1160" height="232" fill="#151327" stroke="rgba(255,255,255,0.10)" stroke-width="1" rx="28"/>
+        #{generate_participant_circles(top_participants, message_counts)}
+
+        <!-- Quote Pill -->
         #{format_quote_line(analytics[:quote]) if analytics[:quote]}
 
-        #{generate_participant_circles(top_participants, message_counts)}
+        <!-- Rootly Logo -->
+        <image href="https://res.cloudinary.com/dip5mdxwe/image/upload/v1759080454/RootlyLogo.min_putzc4.svg"#{' '}
+               x="1100" y="662" width="120" height="60" opacity="1.0" filter="url(#whiteLogo)"/>
+
       </svg>
     SVG
   end
 
-  def generate_subtle_grid
-    (0..12).map { |i| "<line x1='#{i * 100}' y1='0' x2='#{i * 100}' y2='720' stroke='#ffffff' stroke-width='0.5' opacity='0.05'/>" }.join +
-      (0..7).map { |i| "<line x1='0' y1='#{i * 100}' x2='1280' y2='#{i * 100}' stroke='#ffffff' stroke-width='0.5' opacity='0.05'/>" }.join
+  def generate_micro_noise
+    # Add micro-noise layer for polish (3-4% opacity)
+    (0..50).map do |i|
+      x = rand(1280)
+      y = rand(720)
+      opacity = rand(0.03..0.04)
+      size = rand(0.5..2)
+      "<circle cx='#{x}' cy='#{y}' r='#{size}' fill='#ffffff' opacity='#{opacity}'/>"
+    end.join
   end
 
   def generate_participant_circles(slack_users, message_counts)
     return "" if slack_users.blank?
 
+    # Center avatars with equal spacing across the full card width
+    card_width = 1160
+    card_start_x = 60
+    total_spacing = card_width - (slack_users.length * 100)  # 100px per avatar (50px radius * 2)
+    spacing_between = total_spacing / (slack_users.length + 1)  # +1 for spaces on both sides
+    start_x = card_start_x + spacing_between + 50  # +50 to center the first avatar
+
     slack_users.each_with_index.map do |user, index|
-      spacing = 180
-      start_x = 90
-      x = start_x + (index * spacing)
-      y = 550
+      x = start_x + (index * (100 + spacing_between))  # 100px avatar width + spacing
+      y = 562  # Moved down 12px from 550
 
       name = sanitize_text(user.display_name || user.real_name || user.slack_user_id, 12)
       message_count = message_counts[user.slack_user_id] || 0
@@ -137,15 +212,15 @@ class EpicAnalyticsImageJob < ApplicationJob
       <<~CIRCLE
         <defs>
           <clipPath id="circle#{index}">
-            <circle cx="#{x}" cy="#{y}" r="75"/>
+            <circle cx="#{x}" cy="#{y}" r="50"/>
           </clipPath>
         </defs>
-        <circle cx="#{x}" cy="#{y}" r="79" fill="#00ff88" opacity="0.9" stroke="#ffffff" stroke-width="4"/>
-        <image href="#{user.avatar_url}" x="#{x-75}" y="#{y-75}" width="150" height="150" clip-path="url(#circle#{index})"/>
-        <text x="#{x}" y="#{y+100}" text-anchor="middle" fill="#ffffff" font-family="Arial Black, sans-serif" font-size="18" font-weight="bold">
+        <circle cx="#{x}" cy="#{y}" r="55" fill="#7B2CBF" opacity="0.25" stroke="#7B2CBF" stroke-width="2"/>
+        #{generate_avatar_content(user, x, y, index)}
+        <text x="#{x}" y="#{y+46}" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="14" font-weight="600" dominant-baseline="hanging">
           #{name}
         </text>
-        <text x="#{x}" y="#{y+130}" text-anchor="middle" fill="#00ff88" font-family="Arial Black, sans-serif" font-size="16" font-weight="bold">
+        <text x="#{x}" y="#{y+60}" text-anchor="middle" fill="#C7C2DD" font-family="Inter, Montserrat, sans-serif" font-size="12" font-weight="400" dominant-baseline="hanging">
           #{safe_message_label}
         </text>
       CIRCLE
@@ -157,15 +232,101 @@ class EpicAnalyticsImageJob < ApplicationJob
     safe_author = sanitize_text(quote[:author], 40)
     return "" if safe_text.blank?
 
+    # Quote positioned above avatars, centered
     <<~QUOTE.strip
-      <text x="160" y="360" fill="#ffaa00" font-family="Arial Black, sans-serif" font-size="120" font-weight="900" opacity="0.4">“</text>
-      <text x="640" y="420" text-anchor="middle" fill="#ffffff" font-family="Arial Black, sans-serif" font-size="24" font-style="italic" font-weight="900">
-        #{safe_text}
+      <text x="640" y="440" text-anchor="middle" fill="#E7E3F4" font-family="Inter, Montserrat, sans-serif" font-size="18" font-style="italic" font-weight="500" dominant-baseline="hanging">
+        ❝#{safe_text}❞
       </text>
-      <text x="640" y="460" text-anchor="middle" fill="#00ff88" font-family="Arial Black, sans-serif" font-size="22" font-weight="bold">
+      <text x="640" y="470" text-anchor="middle" fill="#C7C2DD" font-family="Inter, Montserrat, sans-serif" font-size="14" font-weight="400" dominant-baseline="hanging">
         — #{safe_author}
       </text>
     QUOTE
+  end
+
+  def generate_avatar_content(user, x, y, index)
+    # Try to get real avatar as data URI, fallback to initials
+    avatar_data_uri = fetch_avatar_as_data_uri(user.avatar_url)
+    initials = generate_initials(user.display_name || user.real_name || user.slack_user_id)
+
+    if avatar_data_uri
+      # Use real avatar
+      "<image href=\"#{avatar_data_uri}\" x=\"#{x-50}\" y=\"#{y-50}\" width=\"100\" height=\"100\" clip-path=\"url(#circle#{index})\"/>"
+    else
+      # Use initials with gradient background
+      <<~AVATAR
+        <defs>
+          <linearGradient id="avatarGrad#{index}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#7B2CBF;stop-opacity:0.8" />
+            <stop offset="100%" style="stop-color:#A461FF;stop-opacity:0.8" />
+          </linearGradient>
+        </defs>
+        <circle cx="#{x}" cy="#{y}" r="50" fill="url(#avatarGrad#{index})"/>
+        <text x="#{x}" y="#{y+6}" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Montserrat, sans-serif" font-size="20" font-weight="700" dominant-baseline="middle">
+          #{initials}
+        </text>
+      AVATAR
+    end
+  end
+
+  def fetch_avatar_as_data_uri(avatar_url)
+    return nil unless avatar_url.present? && avatar_url.start_with?("http")
+
+    begin
+      require "net/http"
+      require "base64"
+
+      uri = URI(avatar_url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.read_timeout = 10
+      http.open_timeout = 10
+
+      request = Net::HTTP::Get.new(uri)
+      response = http.request(request)
+
+      # Follow redirects
+      redirect_count = 0
+      while response.code.start_with?("3") && redirect_count < 5
+        redirect_count += 1
+        location = response["location"]
+        break unless location
+
+        redirect_uri = URI(location)
+        redirect_uri = URI.join(uri, location) if location.start_with?("/")
+
+        http = Net::HTTP.new(redirect_uri.host, redirect_uri.port)
+        http.use_ssl = true
+        http.read_timeout = 10
+        http.open_timeout = 10
+
+        request = Net::HTTP::Get.new(redirect_uri)
+        response = http.request(request)
+      end
+
+      if response.code == "200"
+        content_type = response["content-type"] || "image/jpeg"
+        base64_data = Base64.strict_encode64(response.body)
+        puts "✅ Successfully fetched avatar (#{response.body.length} bytes)"
+        "data:#{content_type};base64,#{base64_data}"
+      else
+        puts "⚠️  Failed to fetch avatar: HTTP #{response.code}"
+        nil
+      end
+    rescue => e
+      puts "⚠️  Error fetching avatar: #{e.message}"
+      nil
+    end
+  end
+
+  def generate_initials(name)
+    return "?" if name.blank?
+
+    words = name.split
+    if words.length >= 2
+      "#{words.first[0]}#{words.last[0]}".upcase
+    else
+      name[0..1].upcase
+    end
   end
 
   def upload_svg_to_cloudinary(svg_content, public_id)
@@ -216,10 +377,10 @@ class EpicAnalyticsImageJob < ApplicationJob
 
     client = Slack::Client.new(@organization)
 
-    # Send with simple message format that works reliably
+    # Send with modern, sleek message format
     message = {
       channel: @incident.slack_channel.slack_channel_id,
-      text: "🔥 *EPIC Incident ##{@incident.number} Analytics!* 🔥\n\nIncident resolved with style!\n\n#{image_url}\n\n*Quick Victory Stats:*\n• #{analytics[:participants].size} heroes participated\n• #{analytics[:total_messages]} battle messages\n• Resolved in #{analytics[:duration]} (#{analytics[:resolution_speed]})"
+      text: "🎯 *Incident ##{@incident.number} Analytics* 🎯\n\nResolution complete with detailed insights.\n\n#{image_url}\n\n*Key Metrics:*\n• #{analytics[:participants].size} team members participated\n• #{analytics[:total_messages]} messages exchanged\n• Resolved in #{analytics[:duration]} (#{analytics[:resolution_speed]})"
     }
 
     client.chat_post_message(message)
@@ -252,30 +413,30 @@ class EpicAnalyticsImageJob < ApplicationJob
 
     case duration_minutes
     when 0..15
-      "⚡ LIGHTNING FAST"
+      "LIGHTNING FAST"
     when 16..60
-      "🚀 BLAZING FAST"
+      "BLAZING FAST"
     when 61..240
-      "✅ SOLID SPEED"
+      "SOLID SPEED"
     when 241..720
-      "🐌 Could Be Faster"
+      "Could Be Faster"
     else
-      "🦥 Time to Optimize"
+      "Time to Optimize"
     end
   end
 
   def categorize_resolution_speed_for_display(duration_seconds)
     case duration_seconds
     when 0..300
-      "⚡ Lightning Fast"
+      "Lightning Fast"
     when 301..1800
-      "🚀 Quick Resolution"
+      "Quick Resolution"
     when 1801..3600
-      "👍 Good Response Time"
+      "Good Response Time"
     when 3601..7200
-      "⏰ Standard Resolution"
+      "Standard Resolution"
     else
-      "🐌 Extended Resolution"
+      "Extended Resolution"
     end
   end
 
