@@ -71,3 +71,11 @@ group :test do
   # Better mocking and stubbing for tests
   gem "mocha"
 end
+
+gem "dotenv-rails"
+
+# Logging Stuff
+gem "opentelemetry-sdk", "~> 1.9"
+gem "opentelemetry-instrumentation-all", "~> 0.84.0"
+gem "opentelemetry-exporter-otlp", "~> 0.30.0"
+gem "lograge", "~> 0.14.0"

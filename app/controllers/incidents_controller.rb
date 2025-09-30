@@ -30,6 +30,8 @@ class IncidentsController < ApplicationController
     @incidents = fetch_sorted_incidents
     @active_incidents = @incidents.active
 
+    Rails.logger.info "Active incidents"
+
     # TURBO FRAME RESPONSE:
     # When a Turbo Frame makes a request, Rails automatically detects it
     # and will only render the matching turbo_frame_tag from the view.
